@@ -1102,6 +1102,43 @@
       background-color: #f1f1f1;
     }
     
+/* Profile Section */
+.profile-stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1.5rem;
+}
+
+/* Profile Stat Card */
+.profile-section .quest-card {
+  width: 100%;
+  margin: 0;
+}
+
+.profile-quests-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1.5rem;
+}
+
+.profile-main-card {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0 1.5rem;
+  width: 100%;
+}
+
     /* Difficulty Slider */
     .difficulty-slider-container {
       margin-bottom: 1rem;
@@ -2021,32 +2058,32 @@
   <h2 class="section-title">My Profile</h2>
   <p class="section-description">Manage your adventurer profile and track your progress.</p>
   
-  <!-- Profile Card at the top -->
-  <div class="quest-card" style="max-width: 800px; margin: 0 auto 2rem;">
-    <div class="quest-header">
-      <h3 class="quest-title">Adventurer Profile</h3>
+  <!-- Profile Card at the top - Fixed version -->
+  <div class="quest-card profile-main-card">
+    <div class="quest-header" style="background-color: var(--color-bronze); width: 100%; border-radius: 8px 8px 0 0;">
+      <h3 class="quest-title" style="color: var(--color-mahogany); margin: 0;">Adventurer Profile</h3>
     </div>
     <div class="quest-body">
       <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem;">
-        <div style="width: 100px; height: 100px; background-color: var(--color-mystic); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-parchment); font-size: 2rem;">
+        <div style="width: 80px; height: 80px; background-color: var(--color-mystic); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-parchment); font-size: 2rem;">
           A
         </div>
         <div>
-          <h3 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem;">Adventurer</h3>
+          <h3 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem; color: var(--color-mahogany);">Adventurer</h3>
           <p style="color: var(--color-mahogany); opacity: 0.8;">Member since: May 2023</p>
         </div>
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
         <div>
-          <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem;">Stats</h4>
+          <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem; color: var(--color-mahogany);">Stats</h4>
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
             <div style="width: 24px; height: 24px; background-color: var(--color-scroll); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
             </div>
-            <span>Level 3 Adventurer</span>
+            <span style="color: var(--color-mahogany);">Level 3 Adventurer</span>
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
             <div style="width: 24px; height: 24px; background-color: var(--color-scroll); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -2056,7 +2093,7 @@
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
             </div>
-            <span>250 Gold</span>
+            <span style="color: var(--color-mahogany);">250 Gold</span>
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <div style="width: 24px; height: 24px; background-color: var(--color-scroll); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -2064,39 +2101,39 @@
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
             </div>
-            <span>120 XP</span>
+            <span style="color: var(--color-mahogany);">120 XP</span>
           </div>
         </div>
         
         <div>
-          <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem;">Guild Membership</h4>
+          <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem; color: var(--color-mahogany);">Guild Membership</h4>
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
             <div style="width: 24px; height: 24px; background-color: var(--color-mystic); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-parchment);">
               M
             </div>
-            <span>Mystic Brewers Guild</span>
+            <span style="color: var(--color-mahogany);">Mystic Brewers Guild</span>
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <div style="width: 24px; height: 24px; background-color: var(--color-mystic); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-parchment);">
               S
             </div>
-            <span>Storytellers Guild</span>
+            <span style="color: var(--color-mahogany);">Storytellers Guild</span>
           </div>
         </div>
       </div>
       
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem;">Bio</h4>
+        <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem; color: var(--color-mahogany);">Bio</h4>
         <p style="color: var(--color-mahogany); line-height: 1.5;">Skilled adventurer with expertise in multiple disciplines. Always looking for new challenges and opportunities to collaborate with fellow questers.</p>
       </div>
       
       <div>
-        <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem;">Skills</h4>
+        <h4 style="font-family: 'MedievalSharp', cursive; margin-bottom: 0.5rem; color: var(--color-mahogany);">Skills</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">Web Development</span>
-          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">Graphic Design</span>
-          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">Creative Writing</span>
-          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">Illustration</span>
+          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-mahogany);">Web Development</span>
+          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-mahogany);">Graphic Design</span>
+          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-mahogany);">Creative Writing</span>
+          <span style="background-color: rgba(205, 170, 125, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; color: var(--color-mahogany);">Illustration</span>
         </div>
       </div>
     </div>
@@ -2164,7 +2201,7 @@
   </div>
   
   <!-- Active and Completed Quests side by side -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+  <div class="profile-quests-container">
     <div class="quest-card">
       <div class="quest-header">
         <h3 class="quest-title">Active Quests</h3>
