@@ -1454,6 +1454,30 @@
         gap: 0.5rem;
       }
     }
+
+    /* Forgot Password Modal Specific Styles */
+#forgot-password-modal .modal {
+  max-width: 450px;
+}
+
+#reset-sent-modal .modal {
+  max-width: 500px;
+  text-align: center;
+}
+
+#reset-sent-modal .modal-body {
+  padding: 2rem;
+}
+
+#forgot-password-link {
+  color: var(--color-mystic);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+#forgot-password-link:hover {
+  text-decoration: underline;
+}
   </style>
 </head>
 <body>
@@ -2476,8 +2500,8 @@
       </div>
       <div class="quest-footer">
         <div class="quest-actions">
-          <button class="modal-btn modal-btn-secondary">Cancel</button>
-          <button class="modal-btn modal-btn-primary">Save Changes</button>
+          <button class="modal-btn modal-btn-secondary" id="settings-cancel-btn">Cancel</button>
+          <button class="modal-btn modal-btn-primary" id="settings-save-btn">Save Changes</button>
         </div>
       </div>
     </div>
@@ -2535,6 +2559,79 @@
     <button class="cta-btn" id="cta-join-btn">Enter the Tavern</button>
   </section>
   
+  <!-- Legal Pages (hidden by default) -->
+<section class="content-container" id="terms-section" style="display: none;">
+  <div class="quest-card">
+    <div class="quest-header">
+      <h3 class="quest-title">Terms of Service</h3>
+    </div>
+    <div class="quest-body">
+      <h4>1. Acceptance of Terms</h4>
+      <p>By accessing or using PeerQuest Tavern, you agree to be bound by these Terms of Service.</p>
+      
+      <h4>2. User Responsibilities</h4>
+      <p>You are responsible for maintaining the confidentiality of your account and password.</p>
+      
+      <h4>3. Content Ownership</h4>
+      <p>You retain ownership of any content you post, but grant us a license to use it for platform operation.</p>
+      
+      <h4>4. Prohibited Conduct</h4>
+      <p>You agree not to engage in any illegal activities or harass other users.</p>
+      
+      <h4>5. Termination</h4>
+      <p>We reserve the right to terminate accounts that violate these terms.</p>
+    </div>
+  </div>
+</section>
+
+<section class="content-container" id="privacy-section" style="display: none;">
+  <div class="quest-card">
+    <div class="quest-header">
+      <h3 class="quest-title">Privacy Policy</h3>
+    </div>
+    <div class="quest-body">
+      <h4>1. Information We Collect</h4>
+      <p>We collect personal information you provide when registering and using our services.</p>
+      
+      <h4>2. How We Use Information</h4>
+      <p>We use your information to provide and improve our services, and communicate with you.</p>
+      
+      <h4>3. Information Sharing</h4>
+      <p>We do not sell your personal information to third parties.</p>
+      
+      <h4>4. Data Security</h4>
+      <p>We implement security measures to protect your information.</p>
+      
+      <h4>5. Your Rights</h4>
+      <p>You may access, correct, or delete your personal information.</p>
+    </div>
+  </div>
+</section>
+
+<section class="content-container" id="cookie-section" style="display: none;">
+  <div class="quest-card">
+    <div class="quest-header">
+      <h3 class="quest-title">Cookie Policy</h3>
+    </div>
+    <div class="quest-body">
+      <h4>1. What Are Cookies</h4>
+      <p>Cookies are small text files stored on your device when you visit websites.</p>
+      
+      <h4>2. How We Use Cookies</h4>
+      <p>We use cookies to remember your preferences and analyze site traffic.</p>
+      
+      <h4>3. Types of Cookies</h4>
+      <p>We use both session and persistent cookies for functionality and analytics.</p>
+      
+      <h4>4. Managing Cookies</h4>
+      <p>You can control cookies through your browser settings.</p>
+      
+      <h4>5. Third-Party Cookies</h4>
+      <p>Some third-party services may set their own cookies.</p>
+    </div>
+  </div>
+</section>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-container">
@@ -2575,9 +2672,9 @@
       <div>
         <h3 class="footer-heading">Legal</h3>
         <ul class="footer-links">
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#" data-section="terms">Terms of Service</a></li>
+          <li><a href="#" data-section="privacy">Privacy Policy</a></li>
+          <li><a href="#" data-section="cookie">Cookie Policy</a></li>
         </ul>
       </div>
     </div>
@@ -2642,7 +2739,7 @@
             <button type="submit" class="modal-btn modal-btn-primary" style="width: 100%;">Login</button>
           </div>
           <div class="form-footer">
-            <a href="#">Forgot password?</a>
+            <a href="#" id="forgot-password-link">Forgot password?</a>
           </div>
           
           <div class="social-login">
@@ -2699,6 +2796,60 @@
     </div>
   </div>
   
+  <!-- Forgot Password Modal -->
+<div class="modal-overlay" id="forgot-password-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Recover Your Password</h2>
+      <button class="modal-close" id="forgot-password-modal-close">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="forgot-password-form">
+        <div class="form-group">
+          <label class="form-label" for="forgot-email">Email Address</label>
+          <input type="email" class="form-input" id="forgot-email" placeholder="Enter your registered email">
+        </div>
+        <div class="form-group">
+          <p style="color: var(--color-mahogany); margin-bottom: 1rem;">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" id="forgot-password-cancel">Cancel</button>
+      <button class="modal-btn modal-btn-primary" id="forgot-password-submit">Send Reset Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Reset Modal (shown after email is sent) -->
+<div class="modal-overlay" id="reset-sent-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Reset Link Sent</h2>
+      <button class="modal-close" id="reset-sent-modal-close">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align: center; padding: 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-mystic)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <h3 style="font-family: 'MedievalSharp', cursive; color: var(--color-mahogany); margin-bottom: 0.5rem;">
+          Check Your Email
+        </h3>
+        <p style="color: var(--color-mahogany); line-height: 1.5;">
+          We've sent a password reset link to your email address. Please check your inbox and follow the instructions.
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-primary" id="reset-sent-close">Return to Login</button>
+    </div>
+  </div>
+</div>
+
   <!-- Post Quest Modal -->
   <div class="modal-overlay" id="post-quest-modal">
     <div class="modal">
@@ -2984,12 +3135,15 @@
     const navLinks = document.querySelectorAll('.nav-links a, .mobile-nav-links a, .footer-links a');
     const sections = {
       'home': document.getElementById('home-section'),
-      'quest-board': document.getElementById('quest-board-section'),
-      'guild-hall': document.getElementById('guild-hall-section'),
-      'profile': document.getElementById('profile-section'),
-      'about': document.getElementById('about-section'),
-      'settings': document.getElementById('settings-section')
-    };
+    'quest-board': document.getElementById('quest-board-section'),
+    'guild-hall': document.getElementById('guild-hall-section'),
+    'profile': document.getElementById('profile-section'),
+    'about': document.getElementById('about-section'),
+    'settings': document.getElementById('settings-section'),
+    'terms': document.getElementById('terms-section'),
+    'privacy': document.getElementById('privacy-section'),
+    'cookie': document.getElementById('cookie-section')
+};
     
 
     // User Dropdown Functionality
@@ -3297,6 +3451,345 @@ mobileLogout?.addEventListener('click', (e) => {
         document.getElementById('login-btn').style.display = 'none';
       }
     });
+
+    // Forgot Password Modal Elements
+const forgotPasswordLink = document.querySelector('.form-footer a[href="#"]');
+const forgotPasswordModal = document.getElementById('forgot-password-modal');
+const forgotPasswordModalClose = document.getElementById('forgot-password-modal-close');
+const forgotPasswordCancel = document.getElementById('forgot-password-cancel');
+const forgotPasswordSubmit = document.getElementById('forgot-password-submit');
+const resetSentModal = document.getElementById('reset-sent-modal');
+const resetSentModalClose = document.getElementById('reset-sent-modal-close');
+const resetSentClose = document.getElementById('reset-sent-close');
+
+// Forgot Password Modal Functions
+function openForgotPasswordModal() {
+  closeAuthModal(); // Close login modal if open
+  forgotPasswordModal.classList.add('active');
+}
+
+function closeForgotPasswordModal() {
+  forgotPasswordModal.classList.remove('active');
+}
+
+function openResetSentModal() {
+  closeForgotPasswordModal();
+  resetSentModal.classList.add('active');
+}
+
+function closeResetSentModal() {
+  resetSentModal.classList.remove('active');
+  openAuthModal(); // Return to login modal
+}
+
+// Event Listeners
+forgotPasswordLink?.addEventListener('click', (e) => {
+  e.preventDefault();
+  openForgotPasswordModal();
+});
+
+forgotPasswordModalClose?.addEventListener('click', closeForgotPasswordModal);
+forgotPasswordCancel?.addEventListener('click', closeForgotPasswordModal);
+resetSentModalClose?.addEventListener('click', closeResetSentModal);
+resetSentClose?.addEventListener('click', closeResetSentModal);
+
+// Forgot Password Form Submission
+forgotPasswordSubmit?.addEventListener('click', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('forgot-email').value;
+  
+  // Simple validation
+  if (!email) {
+    alert('Please enter your email address');
+    return;
+  }
+  
+  // Here you would normally send a request to your backend
+  // For this demo, we'll just simulate it
+  console.log('Password reset requested for:', email);
+  
+  // Show success message
+  openResetSentModal();
+});
+
+// Close modals when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target === forgotPasswordModal) {
+    closeForgotPasswordModal();
+  }
+  if (e.target === resetSentModal) {
+    closeResetSentModal();
+  }
+});
+
+// Edit Profile Button
+const editProfileBtn = document.querySelector('.profile-main-card .modal-btn-primary');
+editProfileBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  navigateToSection('settings');
+});
+
+// View Details Buttons in Profile
+const viewDetailsBtns = document.querySelectorAll('.profile-section a[href="#"]');
+viewDetailsBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openQuestDetailsModal();
+  });
+});
+
+// Store quest data
+const questsData = {
+  1: {
+    title: "Optimize Dragon Database",
+    category: "Development",
+    reward: 75,
+    xp: 100,
+    deadline: "2023-06-15",
+    difficulty: "Medium",
+    description: "Need help optimizing our dragon species database for faster queries. The database contains information about over 500 dragon species and their characteristics.",
+    requirements: [
+      "Experience with database optimization",
+      "Knowledge of SQL and NoSQL databases",
+      "Ability to analyze query performance",
+      "Implement indexing strategies"
+    ],
+    poster: {
+      name: "DragonKeeper",
+      guild: "Beast Masters Guild",
+      avatar: "D"
+    },
+    progress: 65
+  },
+  2: {
+    title: "Create Enchanted Map Component",
+    category: "Development",
+    reward: 100,
+    xp: 150,
+    deadline: "2023-06-20",
+    difficulty: "Hard",
+    description: "Create an interactive map component that shows magical ley lines and points of interest. Should be responsive and work with our existing frontend framework.",
+    requirements: [
+      "Experience with mapping libraries (Leaflet, Mapbox, etc.)",
+      "Knowledge of geospatial data",
+      "Responsive design skills",
+      "Ability to integrate with our API"
+    ],
+    poster: {
+      name: "MapMaster",
+      guild: "Explorers Guild",
+      avatar: "M"
+    },
+    progress: 15
+  },
+  3: {
+    title: "Debug the Ancient Spellbook",
+    category: "Development",
+    reward: 50,
+    xp: 75,
+    deadline: "2023-05-28",
+    difficulty: "Medium",
+    description: "Our ancient spellbook application has several bugs that need fixing. The app translates ancient runes into modern spells but crashes on certain inputs.",
+    requirements: [
+      "Debugging skills",
+      "Experience with text processing",
+      "Knowledge of Unicode handling",
+      "Ability to write unit tests"
+    ],
+    poster: {
+      name: "SpellWeaver",
+      guild: "Arcane Coders Guild",
+      avatar: "S"
+    }
+  }
+};
+
+// Update view details buttons to show specific quest
+document.querySelectorAll('.view-quest-btn, .profile-section a[href="#"]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const questId = btn.getAttribute('data-quest-id') || btn.closest('.quest-card')?.getAttribute('data-quest-id') || 1;
+    const quest = questsData[questId];
+    
+    if (quest) {
+      // Update modal content
+      document.querySelector('.quest-details-title').textContent = quest.title;
+      document.querySelector('.quest-details-description').innerHTML = `<p>${quest.description}</p>`;
+      
+      // Update meta info
+      const metaContainer = document.querySelector('.quest-details-meta');
+      metaContainer.innerHTML = `
+        <div class="quest-details-meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+            <path d="M2 2l7.586 7.586"></path>
+            <circle cx="11" cy="11" r="2"></circle>
+          </svg>
+          <span>${quest.category}</span>
+        </div>
+        <div class="quest-details-meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>${quest.reward} Gold</span>
+        </div>
+        <div class="quest-details-meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>${quest.xp} XP</span>
+        </div>
+        <div class="quest-details-meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>Deadline: ${quest.deadline}</span>
+        </div>
+        <div class="quest-details-meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+          </svg>
+          <span>${quest.difficulty} Difficulty</span>
+        </div>
+      `;
+      
+      // Update requirements
+      const requirementsList = document.querySelector('.quest-details-requirements');
+      requirementsList.innerHTML = quest.requirements.map(req => `<li>${req}</li>`).join('');
+      
+      // Update poster info
+      const posterContainer = document.querySelector('.quest-details-poster');
+      posterContainer.innerHTML = `
+        <div class="quest-details-poster-avatar">${quest.poster.avatar}</div>
+        <div class="quest-details-poster-info">
+          <div class="quest-details-poster-name">${quest.poster.name}</div>
+          <div class="quest-details-poster-meta">${quest.poster.guild ? 'Guild Master • ' + quest.poster.guild : 'Independent Adventurer'}</div>
+        </div>
+      `;
+      
+      // Show progress if it's an active quest
+      const progressSection = document.createElement('div');
+      progressSection.className = 'quest-details-section';
+      if (quest.progress) {
+        progressSection.innerHTML = `
+          <h4 class="quest-details-section-title">Your Progress</h4>
+          <div style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 0.25rem;">
+              <span style="color: var(--color-mahogany); opacity: 0.7;">Progress</span>
+              <span style="font-weight: 500; color: var(--color-mahogany);">${quest.progress}%</span>
+            </div>
+            <div style="height: 6px; background-color: rgba(44, 26, 29, 0.1); border-radius: 3px; overflow: hidden;">
+              <div style="height: 100%; width: ${quest.progress}%; background-color: var(--color-bronze);"></div>
+            </div>
+          </div>
+        `;
+        document.querySelector('.quest-details-modal .modal-body').insertBefore(
+          progressSection,
+          document.querySelector('.quest-details-poster')
+        );
+      }
+      
+      openQuestDetailsModal();
+    }
+  });
+});
+
+// Settings Section Functionality
+const settingsCancelBtn = document.querySelector('#settings-section .modal-btn-secondary');
+const settingsSaveBtn = document.querySelector('#settings-section .modal-btn-primary');
+
+settingsCancelBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  // Reset form fields to original values
+  document.getElementById('username').value = 'Adventurer';
+  document.getElementById('email').value = 'adventurer@example.com';
+  document.getElementById('password').value = '';
+  document.getElementById('confirm-password').value = '';
+  
+  // Uncheck all checkboxes and then check the first two
+  const checkboxes = document.querySelectorAll('#settings-section input[type="checkbox"]');
+  checkboxes.forEach((checkbox, index) => {
+    checkbox.checked = index < 2; // First two checked, third unchecked
+  });
+  
+  // Show a brief notification
+  showNotification('Changes discarded', 'info');
+});
+
+settingsSaveBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  
+  const username = document.getElementById('username').value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  
+  // Simple validation
+  if (password && password !== confirmPassword) {
+    showNotification('Passwords do not match', 'error');
+    return;
+  }
+  
+  // Here you would normally send the data to your backend
+  // For this demo, we'll just simulate it
+  console.log('Settings saved:', {
+    username,
+    email,
+    password: password ? '*****' : 'unchanged'
+  });
+  
+  // Update the profile section if username changed
+  if (username && username !== 'Adventurer') {
+    document.querySelector('#welcome-user').textContent = `Welcome, ${username}!`;
+    document.querySelector('.profile-main-card h3').textContent = username;
+    document.querySelector('.profile-main-card .quest-poster-avatar').textContent = username.charAt(0);
+  }
+  
+  showNotification('Settings saved successfully!', 'success');
+});
+
+// Helper function to show notifications
+function showNotification(message, type) {
+  const notification = document.createElement('div');
+  notification.style.position = 'fixed';
+  notification.style.bottom = '20px';
+  notification.style.right = '20px';
+  notification.style.padding = '12px 24px';
+  notification.style.borderRadius = '4px';
+  notification.style.color = 'white';
+  notification.style.zIndex = '1000';
+  notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+  notification.style.transition = 'all 0.3s ease';
+  
+  // Set colors based on type
+  if (type === 'success') {
+    notification.style.backgroundColor = '#4CAF50';
+  } else if (type === 'error') {
+    notification.style.backgroundColor = '#F44336';
+  } else {
+    notification.style.backgroundColor = '#2196F3';
+  }
+  
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
+}
+
   </script>
 </body>
 </html>
