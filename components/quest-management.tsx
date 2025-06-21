@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { Search, Filter, ChevronDown, ChevronUp, Edit, Trash, CheckCircle, XCircle, Clock } from "lucide-react"
 import type { Quest, User } from "@/lib/types"
+import { EditQuestModal } from "./edit-quest-modal"
 
 interface QuestManagementProps {
   quests: Quest[]
@@ -27,6 +28,7 @@ export function QuestManagement({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [expandedQuestId, setExpandedQuestId] = useState<number | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
+  const [editingQuest, setEditingQuest] = useState<Quest | null>(null)
 
   // Filter quests based on active tab and search query
   const filteredQuests = quests
@@ -78,6 +80,15 @@ export function QuestManagement({
     setQuests((prevQuests) => prevQuests.filter((q) => q.id !== questId))
     setShowDeleteConfirm(null)
     showToast("Quest deleted successfully", "success")
+  }
+
+  const handleEditQuest = (quest: Quest) => {
+    setEditingQuest(quest)
+  }
+
+  const handleSaveQuest = (updatedQuest: Quest) => {
+    setQuests((prevQuests) => prevQuests.map((q) => (q.id === updatedQuest.id ? updatedQuest : q)))
+    setEditingQuest(null)
   }
 
   const handleApproveApplicant = (questId: number, applicantId: number) => {
@@ -157,14 +168,14 @@ export function QuestManagement({
   }
 
   return (
-    <section className="bg-[#F4F0E6] min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-6">
+    <section className="bg-[#F4F0E6] min-h-screen py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <h2 className="text-4xl font-bold text-[#2C1A1D] font-serif mb-6">Quest Management</h2>
 
         {/* Tabs */}
-        <div className="flex border-b border-[#CDAA7D] mb-6">
+        <div className="flex border-b border-[#CDAA7D] mb-4 sm:mb-6 overflow-x-auto">
           <button
-            className={`px-6 py-3 font-medium ${
+            className={`px-4 sm:px-6 py-3 font-medium whitespace-nowrap ${
               activeTab === "created"
                 ? "text-[#8B75AA] border-b-2 border-[#8B75AA]"
                 : "text-[#2C1A1D] hover:text-[#8B75AA]"
@@ -174,7 +185,7 @@ export function QuestManagement({
             Created Quests
           </button>
           <button
-            className={`px-6 py-3 font-medium ${
+            className={`px-4 sm:px-6 py-3 font-medium whitespace-nowrap ${
               activeTab === "applied"
                 ? "text-[#8B75AA] border-b-2 border-[#8B75AA]"
                 : "text-[#2C1A1D] hover:text-[#8B75AA]"
@@ -186,7 +197,7 @@ export function QuestManagement({
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="relative mb-4">
             <input
               type="text"
@@ -198,14 +209,14 @@ export function QuestManagement({
             <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#CDAA7D]" />
           </div>
 
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
             <div className="flex items-center">
               <Filter size={16} className="mr-2 text-[#8B75AA]" />
-              <span className="text-[#2C1A1D] font-medium mr-2">Sort by:</span>
+              <span className="text-[#2C1A1D] font-medium mr-2 text-sm sm:text-base">Sort by:</span>
             </div>
 
             <button
-              className="flex items-center px-3 py-1 border border-[#CDAA7D] rounded bg-white hover:bg-[#F4F0E6]"
+              className="flex items-center px-2 sm:px-3 py-1 border border-[#CDAA7D] rounded bg-white hover:bg-[#F4F0E6] text-sm"
               onClick={() => toggleSort("createdAt")}
             >
               <span className={sortField === "createdAt" ? "text-[#8B75AA] font-medium" : "text-[#2C1A1D]"}>
@@ -219,7 +230,7 @@ export function QuestManagement({
             </button>
 
             <button
-              className="flex items-center px-3 py-1 border border-[#CDAA7D] rounded bg-white hover:bg-[#F4F0E6]"
+              className="flex items-center px-2 sm:px-3 py-1 border border-[#CDAA7D] rounded bg-white hover:bg-[#F4F0E6] text-sm"
               onClick={() => toggleSort("deadline")}
             >
               <span className={sortField === "deadline" ? "text-[#8B75AA] font-medium" : "text-[#2C1A1D]"}>
@@ -233,7 +244,7 @@ export function QuestManagement({
             </button>
 
             <button
-              className="flex items-center px-3 py-1 border border-[#CDAA7D] rounded bg-white hover:bg-[#F4F0E6]"
+              className="flex items-center px-2 sm:px-3 py-1 border border-[#CDAA7D] rounded bg-white hover:bg-[#F4F0E6] text-sm"
               onClick={() => toggleSort("reward")}
             >
               <span className={sortField === "reward" ? "text-[#8B75AA] font-medium" : "text-[#2C1A1D]"}>Reward</span>
@@ -252,10 +263,10 @@ export function QuestManagement({
             {sortedQuests.map((quest) => (
               <div key={quest.id} className="bg-white border border-[#CDAA7D] rounded-lg overflow-hidden">
                 {/* Quest Header */}
-                <div className="bg-[#CDAA7D] p-4 flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-[#2C1A1D]">{quest.title}</h3>
-                    <div className="flex items-center gap-2 mt-1">
+                <div className="bg-[#CDAA7D] p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0">
+                  <div className="flex-1 w-full sm:w-auto">
+                    <h3 className="font-bold text-[#2C1A1D] text-sm sm:text-base">{quest.title}</h3>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
                       <span
                         className={`px-2 py-1 rounded text-xs font-bold text-white ${getStatusBadgeColor(quest.status)}`}
                       >
@@ -268,8 +279,9 @@ export function QuestManagement({
                   </div>
 
                   {activeTab === "created" && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto justify-end">
                       <button
+                        onClick={() => handleEditQuest(quest)}
                         className="p-2 bg-[#8B75AA] text-white rounded hover:bg-[#7A6699] transition-colors"
                         title="Edit Quest"
                       >
@@ -287,20 +299,20 @@ export function QuestManagement({
                 </div>
 
                 {/* Quest Summary */}
-                <div className="p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-4">
+                <div className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-1">
                         <span className="text-[#CDAA7D]">💰</span>
-                        <span className="text-[#2C1A1D] font-medium">{quest.reward}</span>
+                        <span className="text-[#2C1A1D] font-medium text-sm sm:text-base">{quest.reward}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[#8B75AA]">⭐</span>
-                        <span className="text-[#8B75AA] font-medium">{quest.xp}</span>
+                        <span className="text-[#8B75AA] font-medium text-sm sm:text-base">{quest.xp}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-[#8B75AA]">⏰</span>
-                        <span className="text-[#2C1A1D]">
+                        <span className="text-[#2C1A1D] text-sm sm:text-base">
                           Deadline: {new Date(quest.deadline).toLocaleDateString()}
                         </span>
                       </div>
@@ -308,7 +320,7 @@ export function QuestManagement({
 
                     <button
                       onClick={() => setExpandedQuestId(expandedQuestId === quest.id ? null : quest.id)}
-                      className="text-[#8B75AA] hover:text-[#7A6699]"
+                      className="text-[#8B75AA] hover:text-[#7A6699] self-end sm:self-auto"
                     >
                       {expandedQuestId === quest.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
@@ -467,6 +479,17 @@ export function QuestManagement({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Quest Modal */}
+      {editingQuest && (
+        <EditQuestModal
+          isOpen={!!editingQuest}
+          onClose={() => setEditingQuest(null)}
+          quest={editingQuest}
+          onSave={handleSaveQuest}
+          showToast={showToast}
+        />
       )}
     </section>
   )

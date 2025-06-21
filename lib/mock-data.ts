@@ -1,4 +1,76 @@
-import type { User, Quest, Guild, Message, Conversation } from "./types"
+import type { User, Quest, Guild, Message, Conversation, GuildSettings, GuildRole } from "./types"
+
+const defaultGuildSettings: GuildSettings = {
+  joinRequirements: {
+    manualApproval: true,
+    minimumLevel: 1,
+    requiresApplication: true,
+  },
+  visibility: {
+    publiclyVisible: true,
+    showOnHomePage: true,
+    allowDiscovery: true,
+  },
+  permissions: {
+    whoCanPost: "members",
+    whoCanInvite: "members",
+    whoCanKick: "admins",
+  },
+}
+
+const defaultGuildRoles: GuildRole[] = [
+  {
+    id: 1,
+    name: "Owner",
+    description: "The guild's owner",
+    rank: 255,
+    permissions: {
+      manageMembers: true,
+      manageFunds: true,
+      postAnnouncements: true,
+      moderateChat: true,
+      acceptApplications: true,
+      kickMembers: true,
+      banMembers: true,
+      manageRoles: true,
+    },
+    color: "#FFD700",
+  },
+  {
+    id: 2,
+    name: "Admin",
+    description: "Guild administrators",
+    rank: 200,
+    permissions: {
+      manageMembers: true,
+      manageFunds: false,
+      postAnnouncements: true,
+      moderateChat: true,
+      acceptApplications: true,
+      kickMembers: true,
+      banMembers: false,
+      manageRoles: false,
+    },
+    color: "#FF6B6B",
+  },
+  {
+    id: 3,
+    name: "Member",
+    description: "Regular guild members",
+    rank: 1,
+    permissions: {
+      manageMembers: false,
+      manageFunds: false,
+      postAnnouncements: false,
+      moderateChat: false,
+      acceptApplications: false,
+      kickMembers: false,
+      banMembers: false,
+      manageRoles: false,
+    },
+    color: "#4ECDC4",
+  },
+]
 
 export const mockUsers: User[] = [
   {
@@ -260,8 +332,9 @@ export const mockQuests: Quest[] = [
   },
   {
     id: 3,
-    title: "Develop a Potion Recipe",
-    description: "Need an experienced alchemist to develop a new potion recipe for health regeneration.",
+    title: "Guild Alchemy Research Project",
+    description:
+      "Need an experienced alchemist to develop a new potion recipe for health regeneration. This is a guild-sponsored quest with shared rewards.",
     poster: mockUsers[3], // MysticBrewer
     reward: 800,
     xp: 400,
@@ -270,6 +343,9 @@ export const mockQuests: Quest[] = [
     difficulty: "hard",
     status: "open",
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    isGuildQuest: true,
+    guildId: 1,
+    guildReward: 200,
     applicants: [],
   },
   {
@@ -331,14 +407,27 @@ export const mockGuilds: Guild[] = [
     description:
       "A guild dedicated to the art of potion-making and alchemy. We share recipes, techniques, and collaborate on complex brewing projects.",
     emblem: "🧪",
-    poster: mockUsers[3], // MysticBrewer
+    poster: mockUsers[2], // MysticBrewer
     members: 3,
-    membersList: [1, 3, 4], // HeroicAdventurer, QuestSeeker, MysticBrewer
-    admins: [4], // MysticBrewer
+    membersList: [1, 2, 3], // HeroicAdventurer, QuestMaster, MysticBrewer
+    admins: [2], // MysticBrewer
     specialization: "Alchemy",
     category: "Alchemists",
     createdAt: new Date(2023, 3, 15),
     applications: [],
+    funds: 1250,
+    settings: defaultGuildSettings,
+    roles: defaultGuildRoles,
+    socialLinks: ["https://discord.gg/mysticbrewers", "https://twitter.com/mysticbrewers"],
+    shout: {
+      id: 1,
+      content:
+        "Welcome to the Mystic Brewers Guild! We're currently working on a new health potion recipe. Check out our latest guild quest!",
+      authorId: 2,
+      authorName: "MysticBrewer",
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    },
   },
   {
     id: 2,
@@ -346,10 +435,10 @@ export const mockGuilds: Guild[] = [
     description:
       "The official guild for those who help protect and maintain the PeerQuest Tavern. Members get priority on tavern-related quests.",
     emblem: "🛡️",
-    poster: mockUsers[1], // TavernKeeper
-    members: 2,
-    membersList: [1, 2], // HeroicAdventurer, TavernKeeper
-    admins: [1], // HeroicAdventurer
+    poster: mockUsers[3], // TavernKeeper
+    members: 3,
+    membersList: [1, 2, 4], // HeroicAdventurer, QuestMaster, TavernKeeper
+    admins: [4], // TavernKeeper
     specialization: "Protection",
     category: "Warriors",
     createdAt: new Date(2023, 1, 10),
@@ -357,13 +446,32 @@ export const mockGuilds: Guild[] = [
       {
         id: 1,
         userId: 3,
-        username: "QuestSeeker",
-        avatar: "Q",
+        username: "MysticBrewer",
+        avatar: "M",
         message: "I would like to join the Tavern Defenders to help protect this wonderful establishment!",
         status: "pending",
         appliedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       },
     ],
+    funds: 2800,
+    settings: {
+      ...defaultGuildSettings,
+      joinRequirements: {
+        manualApproval: false,
+        minimumLevel: 5,
+        requiresApplication: false,
+      },
+    },
+    roles: defaultGuildRoles,
+    socialLinks: ["https://discord.gg/taverndefenders"],
+    shout: {
+      id: 2,
+      content: "Defenders! We have new tavern security quests available. Let's keep our home safe!",
+      authorId: 4,
+      authorName: "TavernKeeper",
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    },
   },
   {
     id: 3,
@@ -372,16 +480,16 @@ export const mockGuilds: Guild[] = [
       "A guild for artists, designers, and creators of all kinds. We collaborate on creative projects and share techniques.",
     emblem: "🎨",
     poster: mockUsers[0], // HeroicAdventurer
-    members: 1,
-    membersList: [1], // HeroicAdventurer
-    admins: [],
+    members: 2,
+    membersList: [1, 4], // HeroicAdventurer, TavernKeeper
+    admins: [1], // HeroicAdventurer
     specialization: "Art & Design",
     category: "Artists",
     createdAt: new Date(2023, 5, 20),
     applications: [
       {
         id: 2,
-        userId: 4,
+        userId: 2,
         username: "MysticBrewer",
         avatar: "M",
         message: "I have a passion for art and would love to join your creative guild!",
@@ -389,6 +497,18 @@ export const mockGuilds: Guild[] = [
         appliedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
       },
     ],
+    funds: 750,
+    settings: defaultGuildSettings,
+    roles: defaultGuildRoles,
+    socialLinks: ["https://instagram.com/creativecrafters", "https://behance.net/creativecrafters"],
+    shout: {
+      id: 3,
+      content: "Artists unite! We're hosting a design contest this week. Show us your creativity!",
+      authorId: 1,
+      authorName: "HeroicAdventurer",
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    },
   },
 ]
 

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { X, Coins, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react"
 import type { User } from "@/lib/types"
+import { KYCVerificationModal } from "./kyc-verification-modal"
 
 interface GoldSystemModalProps {
   isOpen: boolean
@@ -25,6 +26,9 @@ export function GoldSystemModal({ isOpen, onClose, currentUser, setCurrentUser, 
   const [activeTab, setActiveTab] = useState<"purchase" | "transactions" | "goldex">("transactions")
   const [transactionFilter, setTransactionFilter] = useState("outgoing")
   const [dateRange, setDateRange] = useState("all-time")
+  const [cashoutAmount, setCashoutAmount] = useState("")
+  const [cashoutMethod, setCashoutMethod] = useState("gcash")
+  const [showKYCModal, setShowKYCModal] = useState(false)
 
   if (!isOpen) return null
 
@@ -65,12 +69,10 @@ export function GoldSystemModal({ isOpen, onClose, currentUser, setCurrentUser, 
   ]
 
   const goldPackages = [
-    { amount: 500, price: 269, bonus: "+100 more", popular: false },
-    { amount: 1000, price: 560, bonus: "+200 more", popular: false },
-    { amount: 2000, price: 1150, bonus: "+300 more", popular: false },
-    { amount: 5250, price: 2890, bonus: "+750 more", popular: true },
-    { amount: 11000, price: 5700, bonus: "+1000 more", popular: false },
-    { amount: 24000, price: 11490, bonus: "+1500 more", popular: false },
+    { amount: 500, price: 56, usd: 0.99, rate: 0.112, popular: false },
+    { amount: 2800, price: 285, usd: 4.99, rate: 0.102, popular: true, bonus: "+300 bonus coins" },
+    { amount: 6500, price: 570, usd: 9.99, rate: 0.088, popular: false, bonus: "+1000 bonus coins" },
+    { amount: 14500, price: 1140, usd: 19.99, rate: 0.078, popular: false, bonus: "+2500 bonus coins" },
   ]
 
   const purchaseGold = (amount: number, price: number) => {
@@ -85,26 +87,54 @@ export function GoldSystemModal({ isOpen, onClose, currentUser, setCurrentUser, 
     }
   }
 
-  const cashOutGold = () => {
-    if (!currentUser) return
+  const handleCashOut = () => {
+    if (!currentUser || !cashoutAmount) return
 
-    if (currentUser.gold < 500) {
+    const amount = Number.parseInt(cashoutAmount)
+    const minimumCashout = 5000 // 5,000 coins minimum as per suggestions
+
+    if (amount < minimumCashout) {
       if (showToast) {
-        showToast("You need at least 500 gold to cash out", "error")
+        showToast(`Minimum cashout is ${minimumCashout.toLocaleString()} coins`, "error")
       }
       return
     }
 
-    const cashOutAmount = Math.floor(currentUser.gold / 100) * 10 // 100 gold = ₱10
+    if (amount > currentUser.gold) {
+      if (showToast) {
+        showToast("Insufficient gold balance", "error")
+      }
+      return
+    }
+
+    // Check if KYC is required for large amounts (₱1000+)
+    const cashoutValue = amount * 0.07
+    if (cashoutValue >= 1000) {
+      setShowKYCModal(true)
+      return
+    }
+
+    processCashout(amount)
+  }
+
+  const processCashout = (amount) => {
+    const cashoutValue = (amount * 0.07).toFixed(2)
+
     if (setCurrentUser) {
       setCurrentUser((prev) => ({
         ...prev,
-        gold: prev.gold - Math.floor(prev.gold / 100) * 100,
+        gold: prev.gold - amount,
       }))
     }
+
     if (showToast) {
-      showToast(`Successfully cashed out ₱${cashOutAmount}! Funds will be processed within 72 hours.`)
+      showToast(
+        `Successfully requested cashout of ${amount.toLocaleString()} coins (₱${cashoutValue}) via ${cashoutMethod.toUpperCase()}. Processing time: 24-72 hours.`,
+        "success",
+      )
     }
+
+    setCashoutAmount("")
   }
 
   const filteredTransactions = transactions.filter((transaction) => {
@@ -308,63 +338,131 @@ export function GoldSystemModal({ isOpen, onClose, currentUser, setCurrentUser, 
               </div>
 
               <div className="max-w-2xl mx-auto">
+                {/* Balance Overview */}
                 <div className="bg-gradient-to-r from-[#CDAA7D]/20 to-[#8B75AA]/20 border border-[#CDAA7D] rounded-lg p-6 mb-6">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <div className="text-sm text-[#8B75AA] mb-1">Keep it up, earn more to cash out!</div>
+                      <div className="text-sm text-[#8B75AA] mb-1">Available Balance</div>
                       <div className="text-2xl font-bold text-[#2C1A1D]">
-                        {Math.floor((currentUser?.gold || 0) / 100) * 100} eligible gold
+                        {(currentUser?.gold || 0).toLocaleString()} Gold
                       </div>
-                      <div className="text-sm text-[#8B75AA]">Current rate: 100 gold for ₱10.00 PHP</div>
+                      <div className="text-sm text-[#8B75AA]">≈ ₱{((currentUser?.gold || 0) * 0.07).toFixed(2)}</div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-[#8B75AA] mb-2">Potential Cashout</div>
-                      <div className="text-xl font-bold text-[#2C1A1D]">
-                        ₱{Math.floor((currentUser?.gold || 0) / 100) * 10}.00
-                      </div>
+                    <div>
+                      <div className="text-sm text-[#8B75AA] mb-1">Exchange Rate</div>
+                      <div className="text-xl font-bold text-[#2C1A1D]">₱0.07</div>
+                      <div className="text-sm text-[#8B75AA]">per gold coin</div>
                     </div>
                   </div>
-
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm text-[#8B75AA] mb-1">
-                      <span>Progress to minimum cashout (500 gold)</span>
-                      <span>{Math.min(100, ((currentUser?.gold || 0) / 500) * 100).toFixed(0)}%</span>
-                    </div>
-                    <div className="w-full bg-[#CDAA7D]/30 rounded-full h-2">
-                      <div
-                        className="bg-[#8B75AA] h-2 rounded-full transition-all"
-                        style={{ width: `${Math.min(100, ((currentUser?.gold || 0) / 500) * 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={cashOutGold}
-                    disabled={(currentUser?.gold || 0) < 500}
-                    className={`w-full py-3 rounded font-medium transition-colors ${
-                      (currentUser?.gold || 0) >= 500
-                        ? "bg-[#8B75AA] text-white hover:bg-[#7A6699]"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {(currentUser?.gold || 0) >= 500 ? "Cash Out" : `Need ${500 - (currentUser?.gold || 0)} more gold`}
-                  </button>
                 </div>
 
+                {/* Cashout Form */}
+                <div className="bg-white border border-[#CDAA7D] rounded-lg p-6 mb-6">
+                  <h4 className="font-bold text-[#2C1A1D] mb-4">Cash Out Gold</h4>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#2C1A1D] mb-2">Amount to Cash Out (Gold)</label>
+                      <input
+                        type="number"
+                        value={cashoutAmount}
+                        onChange={(e) => setCashoutAmount(e.target.value)}
+                        placeholder="Enter amount (min. 5,000)"
+                        min="5000"
+                        max={currentUser?.gold || 0}
+                        className="w-full px-3 py-2 border border-[#CDAA7D] rounded focus:outline-none focus:border-[#8B75AA]"
+                      />
+                      {cashoutAmount && (
+                        <div className="mt-2 text-sm text-[#8B75AA]">
+                          You will receive: ₱{(Number.parseInt(cashoutAmount || "0") * 0.07).toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#2C1A1D] mb-2">Cashout Method</label>
+                      <select
+                        value={cashoutMethod}
+                        onChange={(e) => setCashoutMethod(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#CDAA7D] rounded focus:outline-none focus:border-[#8B75AA]"
+                      >
+                        <option value="gcash">GCash</option>
+                        <option value="paymaya">PayMaya</option>
+                        <option value="bank">Bank Transfer</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={handleCashOut}
+                      disabled={
+                        !cashoutAmount ||
+                        Number.parseInt(cashoutAmount || "0") < 5000 ||
+                        Number.parseInt(cashoutAmount || "0") > (currentUser?.gold || 0)
+                      }
+                      className={`w-full py-3 rounded font-medium transition-colors ${
+                        cashoutAmount &&
+                        Number.parseInt(cashoutAmount) >= 5000 &&
+                        Number.parseInt(cashoutAmount) <= (currentUser?.gold || 0)
+                          ? "bg-[#8B75AA] text-white hover:bg-[#7A6699]"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      Request Cashout
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Cashout Options */}
+                <div className="bg-[#F4F0E6] border border-[#CDAA7D] rounded-lg p-4 mb-6">
+                  <h5 className="font-semibold text-[#2C1A1D] mb-3">Quick Cashout</h5>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[5000, 10000, 20000].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => setCashoutAmount(amount.toString())}
+                        disabled={(currentUser?.gold || 0) < amount}
+                        className={`p-2 text-sm rounded border transition-colors ${
+                          (currentUser?.gold || 0) >= amount
+                            ? "border-[#8B75AA] text-[#8B75AA] hover:bg-[#8B75AA] hover:text-white"
+                            : "border-gray-300 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        {amount.toLocaleString()}
+                        <div className="text-xs">₱{(amount * 0.07).toFixed(0)}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Important Notes */}
                 <div className="bg-[#8B75AA]/10 border border-[#8B75AA]/30 rounded-lg p-4">
                   <h4 className="font-bold text-[#2C1A1D] mb-2">Important Notes:</h4>
                   <ul className="text-sm text-[#8B75AA] space-y-1">
-                    <li>• Minimum cashout: 500 gold coins</li>
-                    <li>• Exchange rate: 100 gold = ₱10.00 PHP</li>
-                    <li>• Processing time: Up to 72 hours</li>
+                    <li>• Minimum cashout: 5,000 gold coins (₱350)</li>
+                    <li>• Exchange rate: 1 gold = ₱0.07 PHP</li>
+                    <li>• Processing time: 24-72 hours</li>
+                    <li>• KYC verification required for cashouts ≥₱1,000</li>
                     <li>• Only earned gold from completed quests is eligible</li>
-                    <li>• Transaction fees may apply for international transfers</li>
+                    <li>• Supported methods: GCash, PayMaya, Bank Transfer</li>
                   </ul>
                 </div>
               </div>
             </div>
           )}
         </div>
+        {/* KYC Verification Modal */}
+        {showKYCModal && (
+          <KYCVerificationModal
+            isOpen={showKYCModal}
+            onClose={() => setShowKYCModal(false)}
+            onComplete={() => {
+              processCashout(Number.parseInt(cashoutAmount))
+              setShowKYCModal(false)
+            }}
+            cashoutAmount={Number.parseInt(cashoutAmount || "0")}
+            showToast={showToast}
+          />
+        )}
       </div>
     </div>
   )

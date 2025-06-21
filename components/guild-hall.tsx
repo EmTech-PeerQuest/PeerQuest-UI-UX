@@ -1,22 +1,33 @@
 "use client"
 import { useState } from "react"
 import type { Guild, User } from "@/lib/types"
+import { GuildOverviewModal } from "./guild-overview-modal"
+import { GuildChatModal } from "./guild-chat-modal"
 
 interface GuildHallProps {
   guilds: Guild[]
   currentUser: User | null
   openCreateGuildModal: () => void
   handleApplyForGuild: (guildId: number, message: string) => void
+  showToast: (message: string, type?: string) => void
 }
 
-export function GuildHall({ guilds, currentUser, openCreateGuildModal, handleApplyForGuild }: GuildHallProps) {
+export function GuildHall({
+  guilds,
+  currentUser,
+  openCreateGuildModal,
+  handleApplyForGuild,
+  showToast,
+}: GuildHallProps) {
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [selectedGuildId, setSelectedGuildId] = useState<number | null>(null)
   const [joinMessage, setJoinMessage] = useState("")
+  const [showOverviewModal, setShowOverviewModal] = useState(false)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const [selectedGuild, setSelectedGuild] = useState<Guild | null>(null)
 
   const handleJoinClick = (guildId: number) => {
     if (!currentUser) {
-      // If there's a function to open auth modal, call it here
       if (window.openAuthModal) window.openAuthModal()
       return
     }
@@ -25,14 +36,27 @@ export function GuildHall({ guilds, currentUser, openCreateGuildModal, handleApp
     if (!guild) return
 
     if (guild.membersList && guild.membersList.includes(currentUser.id)) {
-      // If there's a toast function, call it here
-      if (window.showToast) window.showToast("You are already a member of this guild", "error")
+      showToast("You are already a member of this guild", "error")
       return
     }
 
     // Open the join modal
     setSelectedGuildId(guildId)
     setShowJoinModal(true)
+  }
+
+  const handleGuildCardClick = (guild: Guild) => {
+    setSelectedGuild(guild)
+    setShowOverviewModal(true)
+  }
+
+  const handleOpenChat = (guildId: number) => {
+    const guild = guilds.find((g) => g.id === guildId)
+    if (guild) {
+      setSelectedGuild(guild)
+      setShowChatModal(true)
+      setShowOverviewModal(false)
+    }
   }
 
   const submitJoinRequest = () => {
@@ -76,62 +100,103 @@ export function GuildHall({ guilds, currentUser, openCreateGuildModal, handleApp
         </p>
 
         {/* Guild Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {guilds.map((guild) => (
             <div
               key={guild.id}
-              className="bg-white border border-[#CDAA7D] rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-[#CDAA7D]/20 hover:border-[#8B75AA]/30 cursor-pointer group"
+              onClick={() => handleGuildCardClick(guild)}
             >
-              {/* Guild Header */}
-              <div className="bg-[#CDAA7D] p-4 flex justify-between items-start">
-                <div className="flex items-center gap-3 flex-1">
-                  <span className="text-2xl">{guild.emblem}</span>
-                  <h3 className="font-bold text-[#2C1A1D] flex-1">{guild.name}</h3>
+              {/* Guild Header with Gradient */}
+              <div className="bg-gradient-to-r from-[#CDAA7D] to-[#B8956D] p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-3xl shadow-lg">
+                      {guild.emblem}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white text-xl leading-tight font-serif mb-1">{guild.name}</h3>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${getSpecializationBadgeColor(guild.specialization)}`}
+                      >
+                        {guild.specialization.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded text-xs font-bold text-white ${getSpecializationBadgeColor(guild.specialization)}`}
-                >
-                  {guild.specialization.toUpperCase()}
-                </span>
               </div>
 
               {/* Guild Content */}
-              <div className="p-4">
-                <p className="text-[#2C1A1D] text-sm mb-4 line-clamp-3">{guild.description}</p>
+              <div className="p-6">
+                <p className="text-[#2C1A1D] text-sm leading-relaxed mb-6 line-clamp-3">{guild.description}</p>
 
-                <div className="flex justify-between items-center mb-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#8B75AA]">⚡</span>
-                    <span className="text-[#8B75AA]">{guild.specialization.toUpperCase()}</span>
+                {/* Guild Stats */}
+                <div className="bg-gradient-to-r from-[#F4F0E6] to-[#F8F4EA] rounded-lg p-4 mb-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <span className="text-[#8B75AA] text-lg">👥</span>
+                        <span className="text-[#2C1A1D] font-bold text-lg">{guild.members}</span>
+                      </div>
+                      <span className="text-[#8B75AA] text-xs uppercase tracking-wide">Members</span>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <span className="text-yellow-500 text-lg">💰</span>
+                        <span className="text-[#2C1A1D] font-bold text-lg">{guild.funds || 0}</span>
+                      </div>
+                      <span className="text-[#8B75AA] text-xs uppercase tracking-wide">Guild Gold</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#8B75AA]">👥</span>
-                    <span className="text-[#2C1A1D] font-medium">{guild.members} MEMBERS</span>
+                </div>
+
+                {/* Specialization */}
+                <div className="flex items-center gap-2 text-sm text-[#8B75AA] mb-6 bg-[#8B75AA]/5 rounded-lg p-3">
+                  <span className="text-lg">⚡</span>
+                  <div>
+                    <span className="font-medium">Specialization: </span>
+                    <span className="font-bold uppercase">{guild.specialization}</span>
+                  </div>
+                </div>
+
+                {/* Guild Master */}
+                <div className="flex items-center gap-3 mb-6 p-3 bg-[#CDAA7D]/5 rounded-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#8B75AA] to-[#7A6699] rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                    {guild.poster.avatar}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[#2C1A1D]">{guild.poster.username}</div>
+                    <div className="text-xs text-[#8B75AA] uppercase tracking-wide">Guild Master</div>
                   </div>
                 </div>
               </div>
 
               {/* Guild Footer */}
-              <div className="border-t border-[#CDAA7D] p-4 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-[#8B75AA] rounded-full flex items-center justify-center text-white text-sm font-bold">
-                    {guild.poster.avatar}
+              <div className="border-t border-[#CDAA7D]/20 p-6 bg-gradient-to-r from-[#F4F0E6] to-white">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-sm text-[#8B75AA]">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span className="font-medium">Active Guild</span>
                   </div>
-                  <span className="text-[#2C1A1D] text-sm font-medium">{guild.poster.name}</span>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleJoinClick(guild.id)
+                    }}
+                    disabled={currentUser && guild.membersList && guild.membersList.includes(currentUser.id)}
+                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-md ${
+                      currentUser && guild.membersList && guild.membersList.includes(currentUser.id)
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        : "bg-[#8B75AA] text-white hover:bg-[#7A6699] hover:shadow-lg transform hover:-translate-y-0.5"
+                    }`}
+                  >
+                    {currentUser && guild.membersList && guild.membersList.includes(currentUser.id)
+                      ? "✓ JOINED"
+                      : "JOIN GUILD"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleJoinClick(guild.id)}
-                  disabled={currentUser && guild.membersList && guild.membersList.includes(currentUser.id)}
-                  className={`px-4 py-2 rounded font-medium transition-colors ${
-                    currentUser && guild.membersList && guild.membersList.includes(currentUser.id)
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-[#8B75AA] text-white hover:bg-[#7A6699]"
-                  }`}
-                >
-                  {currentUser && guild.membersList && guild.membersList.includes(currentUser.id)
-                    ? "JOINED"
-                    : "JOIN GUILD"}
-                </button>
               </div>
             </div>
           ))}
@@ -167,6 +232,30 @@ export function GuildHall({ guilds, currentUser, openCreateGuildModal, handleApp
               </div>
             </div>
           </div>
+        )}
+
+        {/* Guild Overview Modal */}
+        {selectedGuild && (
+          <GuildOverviewModal
+            isOpen={showOverviewModal}
+            onClose={() => setShowOverviewModal(false)}
+            guild={selectedGuild}
+            currentUser={currentUser}
+            onJoinGuild={handleApplyForGuild}
+            onOpenChat={handleOpenChat}
+            showToast={showToast}
+          />
+        )}
+
+        {/* Guild Chat Modal */}
+        {selectedGuild && (
+          <GuildChatModal
+            isOpen={showChatModal}
+            onClose={() => setShowChatModal(false)}
+            guild={selectedGuild}
+            currentUser={currentUser}
+            showToast={showToast}
+          />
         )}
 
         {/* Features Section */}

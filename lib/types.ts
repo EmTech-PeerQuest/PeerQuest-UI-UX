@@ -16,6 +16,23 @@ export interface User {
   isBanned?: boolean
   createdAt: Date
   settings: UserSettings
+  spendingLimits?: SpendingLimits
+  spendingHistory?: SpendingRecord[]
+}
+
+export interface SpendingLimits {
+  dailyLimit: number
+  weeklyLimit: number
+  enabled: boolean
+  notifications: boolean
+}
+
+export interface SpendingRecord {
+  id: number
+  amount: number
+  type: "quest_posting" | "guild_creation" | "other"
+  description: string
+  date: Date
 }
 
 export interface UserSettings {
@@ -53,6 +70,9 @@ export interface Quest {
   completedAt?: Date
   assignedTo?: number
   applicants: QuestApplication[]
+  isGuildQuest?: boolean
+  guildId?: number
+  guildReward?: number
 }
 
 export interface QuestApplication {
@@ -78,6 +98,56 @@ export interface Guild {
   category: string
   createdAt: Date
   applications: GuildApplication[]
+  funds: number
+  settings: GuildSettings
+  roles: GuildRole[]
+  socialLinks: string[]
+  shout?: GuildShout
+}
+
+export interface GuildSettings {
+  joinRequirements: {
+    manualApproval: boolean
+    minimumLevel: number
+    requiresApplication: boolean
+  }
+  visibility: {
+    publiclyVisible: boolean
+    showOnHomePage: boolean
+    allowDiscovery: boolean
+  }
+  permissions: {
+    whoCanPost: "everyone" | "members" | "admins"
+    whoCanInvite: "everyone" | "members" | "admins"
+    whoCanKick: "admins" | "owner"
+  }
+}
+
+export interface GuildRole {
+  id: number
+  name: string
+  description: string
+  rank: number
+  permissions: {
+    manageMembers: boolean
+    manageFunds: boolean
+    postAnnouncements: boolean
+    moderateChat: boolean
+    acceptApplications: boolean
+    kickMembers: boolean
+    banMembers: boolean
+    manageRoles: boolean
+  }
+  color: string
+}
+
+export interface GuildShout {
+  id: number
+  content: string
+  authorId: number
+  authorName: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface GuildApplication {
@@ -88,6 +158,18 @@ export interface GuildApplication {
   message: string
   status: "pending" | "accepted" | "rejected"
   appliedAt: Date
+}
+
+export interface GuildChatMessage {
+  id: number
+  guildId: number
+  senderId: number
+  senderName: string
+  senderAvatar: string
+  content: string
+  createdAt: Date
+  edited?: boolean
+  editedAt?: Date
 }
 
 export interface Message {
@@ -116,5 +198,17 @@ export interface Report {
   reportedBy: number
   reporterName: string
   status: "pending" | "resolved" | "dismissed"
+  createdAt: Date
+}
+
+export interface GuildTransaction {
+  id: number
+  guildId: number
+  type: "quest_reward" | "donation" | "expense" | "payout"
+  amount: number
+  description: string
+  fromUserId?: number
+  toUserId?: number
+  questId?: number
   createdAt: Date
 }

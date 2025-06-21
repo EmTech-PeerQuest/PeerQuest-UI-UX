@@ -84,14 +84,16 @@ class AuthService {
   private currentUser: User | null = null
 
   constructor() {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem("currentUser")
-    if (storedUser) {
-      try {
-        this.currentUser = JSON.parse(storedUser)
-      } catch (error) {
-        console.error("Failed to parse stored user:", error)
-        localStorage.removeItem("currentUser")
+    // Only access localStorage in the browser environment
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("currentUser")
+      if (storedUser) {
+        try {
+          this.currentUser = JSON.parse(storedUser)
+        } catch (error) {
+          console.error("Failed to parse stored user:", error)
+          localStorage.removeItem("currentUser")
+        }
       }
     }
   }
@@ -108,7 +110,12 @@ class AuthService {
     // Don't include password in the returned user object
     const { password: _, ...userWithoutPassword } = user
     this.currentUser = userWithoutPassword as User
-    localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+
+    // Only access localStorage in the browser environment
+    if (typeof window !== "undefined") {
+      localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+    }
+
     return this.currentUser
   }
 
@@ -166,7 +173,12 @@ class AuthService {
     // Don't include password in the returned user object
     const { password: _, ...userWithoutPassword } = newUser
     this.currentUser = userWithoutPassword as User
-    localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+
+    // Only access localStorage in the browser environment
+    if (typeof window !== "undefined") {
+      localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+    }
+
     return this.currentUser
   }
 
@@ -185,7 +197,11 @@ class AuthService {
 
   logout(): void {
     this.currentUser = null
-    localStorage.removeItem("currentUser")
+
+    // Only access localStorage in the browser environment
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("currentUser")
+    }
   }
 
   async getCurrentUser(): Promise<User | null> {

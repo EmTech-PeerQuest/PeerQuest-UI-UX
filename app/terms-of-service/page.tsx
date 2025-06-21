@@ -27,6 +27,10 @@ export default function TermsOfService() {
           or actions under your password. We encourage you to use "strong" passwords (passwords that use a combination
           of upper and lower case letters, numbers, and symbols) with your account.
         </p>
+        <p className="mb-4">
+          You must be at least 18 years of age to create an account. We may require age verification as part of the
+          registration process.
+        </p>
 
         <h2 className="text-2xl font-semibold mt-6 mb-4">3. User Content</h2>
         <p className="mb-4">
@@ -78,7 +82,14 @@ export default function TermsOfService() {
           <li>Using the platform in a manner inconsistent with any applicable laws or regulations</li>
         </ul>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-4">7. Termination</h2>
+        <h2 className="text-2xl font-semibold mt-6 mb-4">7. Age Requirement</h2>
+        <p className="mb-4">
+          PeerQuest Tavern is intended for users who are 18 years of age or older. By using our platform, you represent
+          and warrant that you are at least 18 years old. If we learn that we have collected personal information from
+          someone under 18, we will promptly delete that information.
+        </p>
+
+        <h2 className="text-2xl font-semibold mt-6 mb-4">8. Termination</h2>
         <p className="mb-4">
           We may terminate or suspend your account and bar access to the platform immediately, without prior notice or
           liability, under our sole discretion, for any reason whatsoever and without limitation, including but not
@@ -89,7 +100,7 @@ export default function TermsOfService() {
           wish to delete your account.
         </p>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-4">8. Limitation of Liability</h2>
+        <h2 className="text-2xl font-semibold mt-6 mb-4">9. Limitation of Liability</h2>
         <p className="mb-4">
           In no event shall PeerQuest Tavern, nor its directors, employees, partners, agents, suppliers, or affiliates,
           be liable for any indirect, incidental, special, consequential or punitive damages, including without
@@ -97,14 +108,14 @@ export default function TermsOfService() {
           use of or inability to access or use the platform.
         </p>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-4">9. Changes to Terms</h2>
+        <h2 className="text-2xl font-semibold mt-6 mb-4">10. Changes to Terms</h2>
         <p className="mb-4">
           We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is
           material we will provide at least 30 days' notice prior to any new terms taking effect. What constitutes a
           material change will be determined at our sole discretion.
         </p>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-4">10. Contact Us</h2>
+        <h2 className="text-2xl font-semibold mt-6 mb-4">11. Contact Us</h2>
         <p className="mb-4">
           If you have any questions about these Terms, please contact us at support@peerquesttavern.com.
         </p>

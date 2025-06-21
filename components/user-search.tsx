@@ -2,18 +2,26 @@
 
 import { useState } from "react"
 import { Search, Filter, ChevronDown, ChevronUp } from "lucide-react"
-import type { User } from "@/lib/types"
+import type { User, Quest, Guild } from "@/lib/types"
+import { UserProfileModal } from "./user-profile-modal"
+import { MessagingModal } from "./messaging-modal"
 
 interface UserSearchProps {
   users: User[]
+  quests: Quest[]
+  guilds: Guild[]
+  currentUser: User | null
+  showToast: (message: string, type?: string) => void
 }
 
-export function UserSearch({ users }: UserSearchProps) {
+export function UserSearch({ users, quests, guilds, currentUser, showToast }: UserSearchProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<"username" | "level" | "quests">("level")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [expandedUserId, setExpandedUserId] = useState<number | null>(null)
   const [selectedSkill, setSelectedSkill] = useState<string>("all")
+  const [selectedUserProfile, setSelectedUserProfile] = useState<User | null>(null)
+  const [messagingUser, setMessagingUser] = useState<User | null>(null)
 
   // Get all unique skills from users
   const allSkills = Array.from(new Set(users.flatMap((user) => user.skills || []).filter(Boolean)))
@@ -55,6 +63,18 @@ export function UserSearch({ users }: UserSearchProps) {
       setSortField(field)
       setSortDirection("desc")
     }
+  }
+
+  const handleViewProfile = (user: User) => {
+    setSelectedUserProfile(user)
+  }
+
+  const handleSendMessage = (user: User) => {
+    if (!currentUser) {
+      showToast("Please log in to send messages", "error")
+      return
+    }
+    setMessagingUser(user)
   }
 
   return (
@@ -229,18 +249,24 @@ export function UserSearch({ users }: UserSearchProps) {
                         </div>
                       </div>
                     )}
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-end gap-2">
-                      <button className="px-3 py-1 border border-[#CDAA7D] rounded text-[#2C1A1D] hover:bg-[#CDAA7D] hover:text-white transition-colors text-sm">
-                        View Profile
-                      </button>
-                      <button className="px-3 py-1 bg-[#8B75AA] text-white rounded hover:bg-[#7A6699] transition-colors text-sm">
-                        Send Message
-                      </button>
-                    </div>
                   </div>
                 )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    onClick={() => handleViewProfile(user)}
+                    className="px-3 py-1 border border-[#CDAA7D] rounded text-[#2C1A1D] hover:bg-[#CDAA7D] hover:text-white transition-colors text-sm"
+                  >
+                    View Profile
+                  </button>
+                  <button
+                    onClick={() => handleSendMessage(user)}
+                    className="px-3 py-1 bg-[#8B75AA] text-white rounded hover:bg-[#7A6699] transition-colors text-sm"
+                  >
+                    Send Message
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -258,6 +284,29 @@ export function UserSearch({ users }: UserSearchProps) {
           </div>
         )}
       </div>
+
+      {/* User Profile Modal */}
+      {selectedUserProfile && (
+        <UserProfileModal
+          isOpen={!!selectedUserProfile}
+          onClose={() => setSelectedUserProfile(null)}
+          user={selectedUserProfile}
+          quests={quests}
+          guilds={guilds}
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* Messaging Modal */}
+      {messagingUser && currentUser && (
+        <MessagingModal
+          isOpen={!!messagingUser}
+          onClose={() => setMessagingUser(null)}
+          recipient={messagingUser}
+          currentUser={currentUser}
+          showToast={showToast}
+        />
+      )}
     </section>
   )
 }

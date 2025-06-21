@@ -9,9 +9,10 @@ import { Settings } from "@/components/settings"
 import { About } from "@/components/about"
 import { AuthModal } from "@/components/auth-modal"
 import { PostQuestModal } from "@/components/post-quest-modal"
-import { CreateGuildModal } from "@/components/create-guild-modal"
+import { EnhancedCreateGuildModal } from "@/components/enhanced-create-guild-modal"
 import { QuestDetailsModal } from "@/components/quest-details-modal"
 import { ApplicationsModal } from "@/components/applications-modal"
+import { EditQuestModal } from "@/components/edit-quest-modal"
 import { GoldSystemModal } from "@/components/gold-system-modal"
 import { Toast } from "@/components/toast"
 import { Footer } from "@/components/footer"
@@ -19,11 +20,12 @@ import { Profile } from "@/components/profile"
 import { UserSearch } from "@/components/user-search"
 import { MessagingSystem } from "@/components/messaging-system"
 import { QuestManagement } from "@/components/quest-management"
-import { GuildManagement } from "@/components/guild-management"
+import { EnhancedGuildManagement } from "@/components/enhanced-guild-management"
 import { AdminPanel } from "@/components/admin-panel"
 import type { User, Quest, Guild, GuildApplication } from "@/lib/types"
 import { mockUsers, mockQuests, mockGuilds } from "@/lib/mock-data"
 import { authService } from "@/lib/auth-service"
+import { addSpendingRecord } from "@/lib/spending-utils"
 
 declare global {
   interface Window {
@@ -45,6 +47,7 @@ export default function Home() {
   const [showCreateGuildModal, setShowCreateGuildModal] = useState<boolean>(false)
   const [showQuestDetailsModal, setShowQuestDetailsModal] = useState<boolean>(false)
   const [showApplicationsModal, setShowApplicationsModal] = useState<boolean>(false)
+  const [showEditQuestModal, setShowEditQuestModal] = useState<boolean>(false)
   const [showGoldPurchaseModal, setShowGoldPurchaseModal] = useState<boolean>(false)
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null)
   const [selectedGuild, setSelectedGuild] = useState<Guild | null>(null)
@@ -150,8 +153,19 @@ export default function Home() {
     setTimeout(() => setToast(null), 5000)
   }
 
-  const handleQuestSubmit = (questData: Partial<Quest>) => {
+  const handleQuestSubmit = (questData: Partial<Quest> & { questCost?: number }) => {
     if (!currentUser) return
+
+    // Deduct gold from user for quest reward and add spending record
+    if (questData.questCost) {
+      const updatedUser = addSpendingRecord(
+        currentUser,
+        questData.questCost,
+        "quest_posting",
+        `Posted quest: ${questData.title}`,
+      )
+      setCurrentUser({ ...updatedUser, gold: updatedUser.gold - questData.questCost })
+    }
 
     const newQuest: Quest = {
       id: Date.now(),
@@ -166,15 +180,29 @@ export default function Home() {
       createdAt: new Date(),
       deadline: questData.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       applicants: [],
+      isGuildQuest: questData.isGuildQuest || false,
+      guildId: questData.guildId,
+      guildReward: questData.guildReward || 0,
     }
 
     setQuests([newQuest, ...quests])
     setShowPostQuestModal(false)
-    showToast("Your quest has been posted!", "success")
+    showToast(`Quest posted! ${questData.questCost} gold deducted for reward pool.`, "success")
   }
 
-  const handleGuildSubmit = (guildData: Partial<Guild>) => {
+  const handleGuildSubmit = (guildData: Partial<Guild> & { guildCreationCost?: number }) => {
     if (!currentUser) return
+
+    // Deduct gold from user for guild creation and add spending record
+    if (guildData.guildCreationCost) {
+      const updatedUser = addSpendingRecord(
+        currentUser,
+        guildData.guildCreationCost,
+        "guild_creation",
+        `Created guild: ${guildData.name}`,
+      )
+      setCurrentUser({ ...updatedUser, gold: updatedUser.gold - guildData.guildCreationCost })
+    }
 
     const newGuild: Guild = {
       id: Date.now(),
@@ -189,16 +217,46 @@ export default function Home() {
       admins: [currentUser.id],
       createdAt: new Date(),
       applications: [],
+      funds: 0,
+      settings: {
+        joinRequirements: {
+          manualApproval: true,
+          minimumLevel: 1,
+          requiresApplication: true,
+        },
+        visibility: {
+          publiclyVisible: true,
+          showOnHomePage: true,
+          allowDiscovery: true,
+        },
+        permissions: {
+          whoCanPost: "members",
+          whoCanInvite: "members",
+          whoCanKick: "admins",
+        },
+      },
+      roles: [],
+      socialLinks: [],
     }
 
     setGuilds([newGuild, ...guilds])
     setShowCreateGuildModal(false)
-    showToast("Your guild has been created!", "success")
+    showToast(`Guild created! ${guildData.guildCreationCost} gold deducted for guild registration.`, "success")
   }
 
   const handleQuestClick = (quest: Quest) => {
     setSelectedQuest(quest)
     setShowQuestDetailsModal(true)
+  }
+
+  const handleEditQuest = (quest: Quest) => {
+    setSelectedQuest(quest)
+    setShowEditQuestModal(true)
+  }
+
+  const handleQuestSave = (updatedQuest: Quest) => {
+    setQuests((prevQuests) => prevQuests.map((quest) => (quest.id === updatedQuest.id ? updatedQuest : quest)))
+    setShowEditQuestModal(false)
   }
 
   const handleApplyForGuild = (guildId: number, message: string) => {
@@ -209,19 +267,27 @@ export default function Home() {
     }
 
     const newApplication: GuildApplication = {
-      id: Date.now().toString(),
-      guildId: guildId.toString(),
-      applicant: {
-        id: currentUser.id,
-        username: currentUser.username,
-        displayName: currentUser.displayName || currentUser.username,
-        profileImage: currentUser.avatar,
-        skills: currentUser.skills?.map((skill) => ({ name: skill, level: 1 })) || [],
-      },
+      id: Date.now(),
+      userId: currentUser.id,
+      username: currentUser.username,
+      avatar: currentUser.avatar,
       message,
       status: "pending",
-      createdAt: new Date(),
+      appliedAt: new Date(),
     }
+
+    // Add application to guild
+    setGuilds((prevGuilds) =>
+      prevGuilds.map((guild) => {
+        if (guild.id === guildId) {
+          return {
+            ...guild,
+            applications: [...(guild.applications || []), newApplication],
+          }
+        }
+        return guild
+      }),
+    )
 
     setGuildApplications([...guildApplications, newApplication])
     showToast("Guild application submitted successfully!", "success")
@@ -240,34 +306,54 @@ export default function Home() {
     showToast(`Successfully purchased ${amount} gold!`, "success")
   }
 
-  const handleApplyForQuest = (questId: number) => {
-    if (!currentUser) {
-      showToast("Please log in to apply for quests", "error")
-      setShowAuthModal(true)
-      return
+  const handleQuestCompletion = (questId: number) => {
+    const quest = quests.find((q) => q.id === questId)
+    if (!quest || !currentUser) return
+
+    // Update quest status
+    setQuests((prevQuests) =>
+      prevQuests.map((q) =>
+        q.id === questId
+          ? {
+              ...q,
+              status: "completed" as const,
+              completedAt: new Date(),
+            }
+          : q,
+      ),
+    )
+
+    // Handle guild quest rewards
+    if (quest.isGuildQuest && quest.guildId && quest.guildReward) {
+      setGuilds((prevGuilds) =>
+        prevGuilds.map((guild) => {
+          if (guild.id === quest.guildId) {
+            return {
+              ...guild,
+              funds: (guild.funds || 0) + quest.guildReward!,
+            }
+          }
+          return guild
+        }),
+      )
+
+      showToast(
+        `Quest completed! ${quest.reward} gold earned and ${quest.guildReward} gold added to guild funds!`,
+        "success",
+      )
+    } else {
+      showToast(`Quest completed! ${quest.reward} gold earned!`, "success")
     }
 
-    if (!selectedQuest) return
-
-    if (selectedQuest.applicants.some((app) => app.userId === currentUser.id)) {
-      showToast("You have already applied for this quest", "error")
-      return
-    }
-
-    const application = {
-      id: Date.now(),
-      userId: currentUser.id,
-      username: currentUser.username,
-      avatar: currentUser.avatar,
-      appliedAt: new Date(),
-      status: "pending" as const,
-      message: "I'm interested in this quest and believe I have the skills to complete it successfully.",
-    }
-
-    setQuests((prev) => prev.map((q) => (q.id === questId ? { ...q, applicants: [...q.applicants, application] } : q)))
-
-    showToast("Application submitted successfully!")
-    setShowQuestDetailsModal(false)
+    // Update user gold and XP
+    setCurrentUser((prevUser) => {
+      if (!prevUser) return null
+      return {
+        ...prevUser,
+        gold: prevUser.gold + quest.reward,
+        xp: prevUser.xp + quest.xp,
+      }
+    })
   }
 
   return (
@@ -310,6 +396,7 @@ export default function Home() {
             setSelectedQuest(quest)
             setShowApplicationsModal(true)
           }}
+          openEditQuestModal={handleEditQuest}
         />
       )}
 
@@ -319,6 +406,7 @@ export default function Home() {
           currentUser={currentUser}
           openCreateGuildModal={() => setShowCreateGuildModal(true)}
           handleApplyForGuild={handleApplyForGuild}
+          showToast={showToast}
         />
       )}
 
@@ -326,17 +414,21 @@ export default function Home() {
         <Profile currentUser={currentUser} quests={quests} guilds={guilds} navigateToSection={setActiveSection} />
       )}
 
+      {activeSection === "guilds" && <div>{/* Placeholder for guilds section */}</div>}
+
       {activeSection === "settings" && currentUser && (
         <Settings
           user={currentUser}
-          updateSettings={(updatedUser) => setCurrentUser(updatedUser)}
+          updateSettings={(updatedUser) => setCurrentUser({ ...currentUser, ...updatedUser })}
           showToast={showToast}
         />
       )}
 
       {activeSection === "about" && <About />}
 
-      {activeSection === "search" && <UserSearch users={users} />}
+      {activeSection === "search" && (
+        <UserSearch users={users} quests={quests} guilds={guilds} currentUser={currentUser} showToast={showToast} />
+      )}
 
       {activeSection === "messages" && currentUser && (
         <MessagingSystem currentUser={currentUser} showToast={showToast} />
@@ -347,9 +439,13 @@ export default function Home() {
           quests={quests}
           currentUser={currentUser}
           onQuestStatusChange={(questId, newStatus) => {
-            const updatedQuests = quests.map((q) => (q.id === questId ? { ...q, status: newStatus } : q))
-            setQuests(updatedQuests)
-            showToast(`Quest status updated to ${newStatus}`, "success")
+            if (newStatus === "completed") {
+              handleQuestCompletion(questId)
+            } else {
+              const updatedQuests = quests.map((q) => (q.id === questId ? { ...q, status: newStatus } : q))
+              setQuests(updatedQuests)
+              showToast(`Quest status updated to ${newStatus}`, "success")
+            }
           }}
           setQuests={setQuests}
           showToast={showToast}
@@ -357,63 +453,57 @@ export default function Home() {
       )}
 
       {activeSection === "guild-management" && currentUser && (
-        <GuildManagement
+        <EnhancedGuildManagement
           guilds={guilds}
           guildApplications={guildApplications}
           currentUser={currentUser}
           showToast={showToast}
           onViewGuild={(guild) => {
-            // Handle view guild
             showToast(`Viewing guild: ${guild.name}`, "info")
           }}
           onEditGuild={(guild) => {
-            // Handle edit guild
             showToast(`Editing guild: ${guild.name}`, "info")
           }}
           onDeleteGuild={(guildId) => {
-            // Handle delete guild
             setGuilds(guilds.filter((g) => g.id !== Number.parseInt(guildId)))
             showToast("Guild deleted successfully", "success")
           }}
           onApproveApplication={(applicationId) => {
-            // Handle approve application
-            const application = guildApplications.find((app) => app.id === applicationId)
+            const application = guildApplications.find((app) => app.id.toString() === applicationId)
             if (application) {
               const updatedApplications = guildApplications.map((app) =>
-                app.id === applicationId ? { ...app, status: "accepted" } : app,
+                app.id.toString() === applicationId ? { ...app, status: "accepted" as const } : app,
               )
               setGuildApplications(updatedApplications)
 
-              // Add user to guild members
-              const guildId = Number.parseInt(application.guildId)
-              const updatedGuilds = guilds.map((guild) => {
-                if (guild.id === guildId) {
-                  const membersList = guild.membersList || []
-                  if (!membersList.includes(application.applicant.id)) {
-                    return {
-                      ...guild,
-                      members: (guild.members || 0) + 1,
-                      membersList: [...membersList, application.applicant.id],
-                    }
-                  }
-                }
-                return guild
-              })
+              const updatedGuilds = guilds.map((guild) => ({
+                ...guild,
+                applications: guild.applications.map((app) =>
+                  app.id.toString() === applicationId ? { ...app, status: "accepted" as const } : app,
+                ),
+              }))
               setGuilds(updatedGuilds)
 
               showToast("Application approved", "success")
             }
           }}
           onRejectApplication={(applicationId) => {
-            // Handle reject application
             const updatedApplications = guildApplications.map((app) =>
-              app.id === applicationId ? { ...app, status: "rejected" } : app,
+              app.id.toString() === applicationId ? { ...app, status: "rejected" as const } : app,
             )
             setGuildApplications(updatedApplications)
+
+            const updatedGuilds = guilds.map((guild) => ({
+              ...guild,
+              applications: guild.applications.map((app) =>
+                app.id.toString() === applicationId ? { ...app, status: "rejected" as const } : app,
+              ),
+            }))
+            setGuilds(updatedGuilds)
+
             showToast("Application rejected", "success")
           }}
           onManageMembers={(guild) => {
-            // Handle manage members
             showToast(`Managing members for guild: ${guild.name}`, "info")
           }}
         />
@@ -450,13 +540,15 @@ export default function Home() {
         onClose={() => setShowPostQuestModal(false)}
         currentUser={currentUser}
         onSubmit={handleQuestSubmit}
+        guilds={guilds}
       />
 
-      <CreateGuildModal
+      <EnhancedCreateGuildModal
         isOpen={showCreateGuildModal}
         onClose={() => setShowCreateGuildModal(false)}
         currentUser={currentUser}
         onSubmit={handleGuildSubmit}
+        showToast={showToast}
       />
 
       {selectedQuest && (
@@ -469,6 +561,7 @@ export default function Home() {
           setQuests={setQuests}
           showToast={showToast}
           setAuthModalOpen={setShowAuthModal}
+          openEditQuestModal={handleEditQuest}
         />
       )}
 
@@ -478,6 +571,14 @@ export default function Home() {
         quests={quests}
         currentUser={currentUser}
         setQuests={setQuests}
+      />
+
+      <EditQuestModal
+        isOpen={showEditQuestModal}
+        onClose={() => setShowEditQuestModal(false)}
+        quest={selectedQuest}
+        onSave={handleQuestSave}
+        showToast={showToast}
       />
 
       <GoldSystemModal

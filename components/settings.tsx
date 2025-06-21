@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Eye, EyeOff, Save, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, Save, AlertCircle, Shield, TrendingDown, Menu, X } from "lucide-react"
+import type { SpendingLimits } from "@/lib/types"
+import { getDailySpending, getWeeklySpending } from "@/lib/spending-utils"
 
 interface SettingsProps {
   user: any
@@ -11,8 +13,9 @@ interface SettingsProps {
 
 export function Settings({ user, updateSettings, showToast }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<
-    "account" | "security" | "privacy" | "notifications" | "payment" | "subscriptions" | "parental" | "app"
+    "account" | "security" | "privacy" | "notifications" | "payment" | "subscriptions" | "app" | "spending"
   >("account")
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -61,6 +64,24 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
     directMessages: user?.settings?.notifications?.directMessages || true,
     newsletter: user?.settings?.notifications?.newsletter || false,
   })
+
+  const [spendingForm, setSpendingForm] = useState<SpendingLimits>({
+    dailyLimit: user?.spendingLimits?.dailyLimit || 5000,
+    weeklyLimit: user?.spendingLimits?.weeklyLimit || 25000,
+    enabled: user?.spendingLimits?.enabled || false,
+    notifications: user?.spendingLimits?.notifications || true,
+  })
+
+  const tabs = [
+    { id: "account", label: "Account Info" },
+    { id: "security", label: "Security" },
+    { id: "privacy", label: "Privacy" },
+    { id: "notifications", label: "Notifications" },
+    { id: "spending", label: "Spending Limits" },
+    { id: "payment", label: "Payment Methods" },
+    { id: "subscriptions", label: "Subscriptions" },
+    { id: "app", label: "App Permissions" },
+  ]
 
   const saveAccountSettings = () => {
     updateSettings({
@@ -130,6 +151,13 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
     showToast("Notification settings saved successfully!")
   }
 
+  const saveSpendingSettings = () => {
+    updateSettings({
+      spendingLimits: spendingForm,
+    })
+    showToast("Spending limits updated successfully!")
+  }
+
   const generateBackupCodes = () => {
     updateSettings({
       settings: {
@@ -143,83 +171,65 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
     showToast("Backup codes generated successfully!")
   }
 
-  return (
-    <section className="bg-[#F4F0E6] min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-4 text-[#2C1A1D] font-serif">Settings</h2>
-        <p className="text-center text-[#8B75AA] mb-8">CUSTOMIZE YOUR PEERQUEST TAVERN EXPERIENCE.</p>
+  const dailySpent = getDailySpending(user)
+  const weeklySpent = getWeeklySpending(user)
 
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar */}
-          <div className="md:w-64 bg-[#2C1A1D] text-[#F4F0E6] rounded-lg overflow-hidden">
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as any)
+    setShowMobileMenu(false)
+  }
+
+  return (
+    <section className="bg-[#F4F0E6] min-h-screen py-4 md:py-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-6">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-[#2C1A1D] font-serif">Settings</h2>
+        <p className="text-center text-[#8B75AA] mb-6 md:mb-8">CUSTOMIZE YOUR PEERQUEST TAVERN EXPERIENCE.</p>
+
+        {/* Mobile Header */}
+        <div className="md:hidden mb-4">
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="w-full bg-[#2C1A1D] text-[#F4F0E6] p-3 rounded-lg flex items-center justify-between"
+          >
+            <span>{tabs.find((tab) => tab.id === activeTab)?.label}</span>
+            {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
+          </button>
+
+          {showMobileMenu && (
+            <div className="mt-2 bg-[#2C1A1D] rounded-lg overflow-hidden">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`w-full text-left px-4 py-3 text-[#F4F0E6] border-b border-[#CDAA7D]/20 last:border-b-0 ${
+                    activeTab === tab.id ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+          {/* Desktop Sidebar */}
+          <div className="hidden md:block md:w-64 bg-[#2C1A1D] text-[#F4F0E6] rounded-lg overflow-hidden">
             <div className="p-4 border-b border-[#CDAA7D]/30">
               <h3 className="font-bold text-lg">Settings</h3>
             </div>
             <div className="p-2">
-              <button
-                onClick={() => setActiveTab("account")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "account" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Account Info
-              </button>
-              <button
-                onClick={() => setActiveTab("security")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "security" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Security
-              </button>
-              <button
-                onClick={() => setActiveTab("privacy")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "privacy" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Privacy & Content Restrictions
-              </button>
-              <button
-                onClick={() => setActiveTab("notifications")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "notifications" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Notifications
-              </button>
-              <button
-                onClick={() => setActiveTab("payment")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "payment" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Payment Methods
-              </button>
-              <button
-                onClick={() => setActiveTab("subscriptions")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "subscriptions" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Subscriptions
-              </button>
-              <button
-                onClick={() => setActiveTab("parental")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "parental" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                Parental Controls
-              </button>
-              <button
-                onClick={() => setActiveTab("app")}
-                className={`w-full text-left px-4 py-2 rounded transition-colors ${
-                  activeTab === "app" ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
-                }`}
-              >
-                App Permissions
-              </button>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`w-full text-left px-4 py-2 rounded transition-colors text-sm ${
+                    activeTab === tab.id ? "bg-[#CDAA7D] text-[#2C1A1D]" : "hover:bg-[#CDAA7D]/20"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -227,7 +237,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
           <div className="flex-1 bg-[#2C1A1D] text-[#F4F0E6] rounded-lg overflow-hidden">
             {/* Account Info */}
             {activeTab === "account" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">Account Info</h3>
 
                 <div className="space-y-6">
@@ -236,7 +246,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                     <div className="flex items-center">
                       <input
                         type="text"
-                        className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                        className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                         value={accountForm.displayName}
                         onChange={(e) => setAccountForm((prev) => ({ ...prev, displayName: e.target.value }))}
                       />
@@ -264,7 +274,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                     <div className="flex items-center">
                       <input
                         type="text"
-                        className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                        className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                         value={accountForm.username}
                         onChange={(e) => setAccountForm((prev) => ({ ...prev, username: e.target.value }))}
                       />
@@ -293,7 +303,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                     <div className="flex items-center">
                       <input
                         type="email"
-                        className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                        className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                         value={accountForm.email}
                         onChange={(e) => setAccountForm((prev) => ({ ...prev, email: e.target.value }))}
                       />
@@ -322,7 +332,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                   <div>
                     <label className="block text-sm font-medium mb-2">Bio</label>
                     <textarea
-                      className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] h-24 resize-none"
+                      className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] h-20 md:h-24 resize-none text-sm"
                       value={accountForm.bio}
                       onChange={(e) => setAccountForm((prev) => ({ ...prev, bio: e.target.value }))}
                     ></textarea>
@@ -331,104 +341,108 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                   <div>
                     <h4 className="text-lg font-bold mb-3">Personal</h4>
 
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">Birthday</label>
-                      <div className="flex items-center">
-                        <input
-                          type="date"
-                          className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
-                          value={accountForm.birthday}
-                          onChange={(e) => setAccountForm((prev) => ({ ...prev, birthday: e.target.value }))}
-                        />
-                        <div className="ml-2 text-[#CDAA7D]">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
-                            <path d="M12 6v6l4 2"></path>
-                          </svg>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Birthday</label>
+                        <div className="flex items-center">
+                          <input
+                            type="date"
+                            className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
+                            value={accountForm.birthday}
+                            onChange={(e) => setAccountForm((prev) => ({ ...prev, birthday: e.target.value }))}
+                          />
+                          <div className="ml-2 text-[#CDAA7D]">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                              <path d="M12 6v6l4 2"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="flex items-center mt-1">
+                          <span className="text-xs bg-blue-800 text-blue-200 px-2 py-0.5 rounded">Verified</span>
                         </div>
                       </div>
-                      <div className="flex items-center mt-1">
-                        <span className="text-xs bg-blue-800 text-blue-200 px-2 py-0.5 rounded">Verified</span>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Gender (optional)</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            className={`py-2 px-4 border ${
+                              accountForm.gender === "male"
+                                ? "bg-[#8B75AA] text-white"
+                                : "border-[#CDAA7D] text-[#F4F0E6]"
+                            } rounded font-medium transition-colors flex items-center justify-center text-sm`}
+                            onClick={() => setAccountForm((prev) => ({ ...prev, gender: "male" }))}
+                          >
+                            <span className="mr-2">♂</span>
+                            MALE
+                          </button>
+
+                          <button
+                            type="button"
+                            className={`py-2 px-4 border ${
+                              accountForm.gender === "female"
+                                ? "bg-[#8B75AA] text-white"
+                                : "border-[#CDAA7D] text-[#F4F0E6]"
+                            } rounded font-medium transition-colors flex items-center justify-center text-sm`}
+                            onClick={() => setAccountForm((prev) => ({ ...prev, gender: "female" }))}
+                          >
+                            <span className="mr-2">♀</span>
+                            FEMALE
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">Gender (optional)</label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <button
-                          type="button"
-                          className={`py-2 border ${
-                            accountForm.gender === "male"
-                              ? "bg-[#8B75AA] text-white"
-                              : "border-[#CDAA7D] text-[#F4F0E6]"
-                          } rounded font-medium transition-colors flex items-center justify-center`}
-                          onClick={() => setAccountForm((prev) => ({ ...prev, gender: "male" }))}
-                        >
-                          <span className="mr-2">♂</span>
-                          MALE
-                        </button>
-
-                        <button
-                          type="button"
-                          className={`py-2 border ${
-                            accountForm.gender === "female"
-                              ? "bg-[#8B75AA] text-white"
-                              : "border-[#CDAA7D] text-[#F4F0E6]"
-                          } rounded font-medium transition-colors flex items-center justify-center`}
-                          onClick={() => setAccountForm((prev) => ({ ...prev, gender: "female" }))}
-                        >
-                          <span className="mr-2">♀</span>
-                          FEMALE
-                        </button>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Account Location</label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
+                          value={accountForm.location}
+                          onChange={(e) => setAccountForm((prev) => ({ ...prev, location: e.target.value }))}
+                          placeholder="Enter your location"
+                        />
                       </div>
-                    </div>
 
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">Account Location</label>
-                      <input
-                        type="text"
-                        className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
-                        value={accountForm.location}
-                        onChange={(e) => setAccountForm((prev) => ({ ...prev, location: e.target.value }))}
-                        placeholder="Enter your location"
-                      />
-                    </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Language</label>
+                          <select
+                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
+                            value={accountForm.language}
+                            onChange={(e) => setAccountForm((prev) => ({ ...prev, language: e.target.value }))}
+                          >
+                            <option value="English">English</option>
+                            <option value="Spanish">Spanish</option>
+                            <option value="French">French</option>
+                            <option value="German">German</option>
+                            <option value="Japanese">Japanese</option>
+                          </select>
+                        </div>
 
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">Language</label>
-                      <select
-                        className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
-                        value={accountForm.language}
-                        onChange={(e) => setAccountForm((prev) => ({ ...prev, language: e.target.value }))}
-                      >
-                        <option value="English">English</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Japanese">Japanese</option>
-                      </select>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">Theme</label>
-                      <select
-                        className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
-                        value={accountForm.theme}
-                        onChange={(e) => setAccountForm((prev) => ({ ...prev, theme: e.target.value as any }))}
-                      >
-                        <option value="dark">Dark</option>
-                        <option value="light">Light</option>
-                      </select>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Theme</label>
+                          <select
+                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
+                            value={accountForm.theme}
+                            onChange={(e) => setAccountForm((prev) => ({ ...prev, theme: e.target.value as any }))}
+                          >
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -440,7 +454,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">Facebook</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.facebook}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -456,7 +470,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">Twitter</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.twitter}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -472,7 +486,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">YouTube</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.youtube}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -488,7 +502,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">Twitch</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.twitch}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -504,7 +518,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">GitHub</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.github}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -520,7 +534,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">LinkedIn</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.linkedin}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -536,7 +550,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <label className="block text-sm font-medium mb-2">Website</label>
                         <input
                           type="text"
-                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value={accountForm.socialLinks.website}
                           onChange={(e) =>
                             setAccountForm((prev) => ({
@@ -553,7 +567,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                   <div className="pt-4">
                     <button
                       onClick={saveAccountSettings}
-                      className="px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center"
+                      className="w-full sm:w-auto px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center justify-center"
                     >
                       <Save size={16} className="mr-2" />
                       Save Changes
@@ -565,7 +579,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
 
             {/* Security */}
             {activeTab === "security" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">Security</h3>
 
                 <div className="space-y-6">
@@ -582,7 +596,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                       <div className="flex items-center">
                         <input
                           type="password"
-                          className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                          className="flex-1 px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
                           value="••••••••"
                           disabled
                         />
@@ -602,7 +616,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <div className="relative">
                           <input
                             type={showPassword ? "text" : "password"}
-                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm pr-10"
                             value={securityForm.currentPassword}
                             onChange={(e) => setSecurityForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
                             placeholder="Enter your current password"
@@ -622,7 +636,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <div className="relative">
                           <input
                             type={showNewPassword ? "text" : "password"}
-                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm pr-10"
                             value={securityForm.newPassword}
                             onChange={(e) => setSecurityForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                             placeholder="Create a new password"
@@ -642,7 +656,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         <div className="relative">
                           <input
                             type={showConfirmPassword ? "text" : "password"}
-                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]"
+                            className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm pr-10"
                             value={securityForm.confirmPassword}
                             onChange={(e) => setSecurityForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                             placeholder="Confirm your new password"
@@ -666,135 +680,137 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                       recovery, and high-value transactions. You can enable one of the following options at a time.
                     </p>
 
-                    <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-medium">Authenticator App (Very Secure)</h5>
-                          <p className="text-sm text-[#F4F0E6]/70 mt-1">
-                            Download an app on your phone to generate unique security codes. Suggested apps include
-                            Google Authenticator, Microsoft Authenticator, and Twilio's Authy.
-                          </p>
-                        </div>
-                        <div className="ml-4">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={
-                                securityForm.twoFactorEnabled && securityForm.twoFactorMethod === "authenticator"
-                              }
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSecurityForm((prev) => ({
-                                    ...prev,
-                                    twoFactorEnabled: true,
-                                    twoFactorMethod: "authenticator",
-                                  }))
-                                } else {
-                                  setSecurityForm((prev) => ({
-                                    ...prev,
-                                    twoFactorEnabled: false,
-                                  }))
+                    <div className="space-y-4">
+                      <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1">
+                            <h5 className="font-medium">Authenticator App (Very Secure)</h5>
+                            <p className="text-sm text-[#F4F0E6]/70 mt-1">
+                              Download an app on your phone to generate unique security codes. Suggested apps include
+                              Google Authenticator, Microsoft Authenticator, and Twilio's Authy.
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={
+                                  securityForm.twoFactorEnabled && securityForm.twoFactorMethod === "authenticator"
                                 }
-                              }}
-                            />
-                            <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
-                          </label>
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSecurityForm((prev) => ({
+                                      ...prev,
+                                      twoFactorEnabled: true,
+                                      twoFactorMethod: "authenticator",
+                                    }))
+                                  } else {
+                                    setSecurityForm((prev) => ({
+                                      ...prev,
+                                      twoFactorEnabled: false,
+                                    }))
+                                  }
+                                }}
+                              />
+                              <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
+                            </label>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-medium">Email (Secure)</h5>
-                          <p className="text-sm text-[#F4F0E6]/70 mt-1">
-                            Receive unique security codes at {user?.email.substring(0, 3)}•••••••@
-                            {user?.email.split("@")[1]}.
-                          </p>
-                        </div>
-                        <div className="ml-4">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={securityForm.twoFactorEnabled && securityForm.twoFactorMethod === "email"}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSecurityForm((prev) => ({
-                                    ...prev,
-                                    twoFactorEnabled: true,
-                                    twoFactorMethod: "email",
-                                  }))
-                                } else {
-                                  setSecurityForm((prev) => ({
-                                    ...prev,
-                                    twoFactorEnabled: false,
-                                  }))
-                                }
-                              }}
-                            />
-                            <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
-                          </label>
+                      <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1">
+                            <h5 className="font-medium">Email (Secure)</h5>
+                            <p className="text-sm text-[#F4F0E6]/70 mt-1">
+                              Receive unique security codes at {user?.email?.substring(0, 3)}•••••••@
+                              {user?.email?.split("@")[1]}.
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={securityForm.twoFactorEnabled && securityForm.twoFactorMethod === "email"}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSecurityForm((prev) => ({
+                                      ...prev,
+                                      twoFactorEnabled: true,
+                                      twoFactorMethod: "email",
+                                    }))
+                                  } else {
+                                    setSecurityForm((prev) => ({
+                                      ...prev,
+                                      twoFactorEnabled: false,
+                                    }))
+                                  }
+                                }}
+                              />
+                              <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
+                            </label>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-medium">Hardware Security Keys (Very Secure)</h5>
-                          <p className="text-sm text-[#F4F0E6]/70 mt-1">
-                            Supported on web browsers, iPhone, and iPad. Use a hardware key as an extra layer of
-                            protection while logging in.
-                          </p>
-                        </div>
-                        <div className="ml-4">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={securityForm.twoFactorEnabled && securityForm.twoFactorMethod === "hardware"}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSecurityForm((prev) => ({
-                                    ...prev,
-                                    twoFactorEnabled: true,
-                                    twoFactorMethod: "hardware",
-                                  }))
-                                } else {
-                                  setSecurityForm((prev) => ({
-                                    ...prev,
-                                    twoFactorEnabled: false,
-                                  }))
-                                }
-                              }}
-                            />
-                            <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
-                          </label>
+                      <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1">
+                            <h5 className="font-medium">Hardware Security Keys (Very Secure)</h5>
+                            <p className="text-sm text-[#F4F0E6]/70 mt-1">
+                              Supported on web browsers, iPhone, and iPad. Use a hardware key as an extra layer of
+                              protection while logging in.
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={securityForm.twoFactorEnabled && securityForm.twoFactorMethod === "hardware"}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSecurityForm((prev) => ({
+                                      ...prev,
+                                      twoFactorEnabled: true,
+                                      twoFactorMethod: "hardware",
+                                    }))
+                                  } else {
+                                    setSecurityForm((prev) => ({
+                                      ...prev,
+                                      twoFactorEnabled: false,
+                                    }))
+                                  }
+                                }}
+                              />
+                              <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
+                            </label>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-medium">Backup Codes</h5>
-                          <p className="text-sm text-[#F4F0E6]/70 mt-1">
-                            You have {user?.settings?.security?.backupCodesGenerated ? "8 unused" : "0"} backup codes.
-                          </p>
-                          <p className="text-sm text-[#F4F0E6]/70 mt-2">
-                            Generate and use backup codes in case you lose access to your 2-Step Verification option. Do
-                            not share your backup codes with anyone.
-                          </p>
-                        </div>
-                        <div className="ml-4">
-                          <button
-                            onClick={generateBackupCodes}
-                            className="px-3 py-1 bg-[#CDAA7D] text-[#2C1A1D] rounded text-sm font-medium"
-                          >
-                            Generate
-                          </button>
+                      <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1">
+                            <h5 className="font-medium">Backup Codes</h5>
+                            <p className="text-sm text-[#F4F0E6]/70 mt-1">
+                              You have {user?.settings?.security?.backupCodesGenerated ? "8 unused" : "0"} backup codes.
+                            </p>
+                            <p className="text-sm text-[#F4F0E6]/70 mt-2">
+                              Generate and use backup codes in case you lose access to your 2-Step Verification option.
+                              Do not share your backup codes with anyone.
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={generateBackupCodes}
+                              className="px-3 py-1 bg-[#CDAA7D] text-[#2C1A1D] rounded text-sm font-medium"
+                            >
+                              Generate
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -815,7 +831,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                   <div className="pt-4">
                     <button
                       onClick={saveSecuritySettings}
-                      className="px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center"
+                      className="w-full sm:w-auto px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center justify-center"
                     >
                       <Save size={16} className="mr-2" />
                       Save Changes
@@ -827,7 +843,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
 
             {/* Privacy */}
             {activeTab === "privacy" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">Privacy & Content Restrictions</h3>
 
                 <div className="space-y-6">
@@ -835,14 +851,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                     <h4 className="text-lg font-bold mb-3">Privacy Settings</h4>
 
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Show Birthday on Profile</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Allow other adventurers to see your birthday on your public profile.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -855,14 +871,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Show Gender on Profile</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Allow other adventurers to see your gender on your public profile.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -875,14 +891,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Show Email on Profile</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Allow other adventurers to see your email on your public profile.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -901,15 +917,15 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                     <h4 className="text-lg font-bold mb-3">Content Restrictions</h4>
 
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Mature Content Filter</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Filter out quests and guilds that may contain mature content.
                           </p>
                         </div>
-                        <div className="ml-4">
-                          <select className="px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]">
+                        <div className="flex-shrink-0">
+                          <select className="px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm">
                             <option value="strict">Strict</option>
                             <option value="moderate">Moderate</option>
                             <option value="off">Off</option>
@@ -917,15 +933,15 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Quest Visibility</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Control who can see the quests you've created.
                           </p>
                         </div>
-                        <div className="ml-4">
-                          <select className="px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]">
+                        <div className="flex-shrink-0">
+                          <select className="px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm">
                             <option value="everyone">Everyone</option>
                             <option value="guild-members">Guild Members Only</option>
                             <option value="friends">Friends Only</option>
@@ -933,13 +949,13 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Profile Visibility</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">Control who can see your profile.</p>
                         </div>
-                        <div className="ml-4">
-                          <select className="px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA]">
+                        <div className="flex-shrink-0">
+                          <select className="px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm">
                             <option value="everyone">Everyone</option>
                             <option value="guild-members">Guild Members Only</option>
                             <option value="friends">Friends Only</option>
@@ -952,7 +968,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                   <div className="pt-4">
                     <button
                       onClick={savePrivacySettings}
-                      className="px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center"
+                      className="w-full sm:w-auto px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center justify-center"
                     >
                       <Save size={16} className="mr-2" />
                       Save Changes
@@ -964,7 +980,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
 
             {/* Notifications */}
             {activeTab === "notifications" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">Notifications</h3>
 
                 <div className="space-y-6">
@@ -972,14 +988,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                     <h4 className="text-lg font-bold mb-3">Notification Preferences</h4>
 
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">New Quest Notifications</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Receive notifications when new quests matching your skills are posted.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -994,14 +1010,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Quest Application Notifications</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Receive notifications about your quest applications and when someone applies to your quests.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -1016,14 +1032,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Guild Announcements</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Receive notifications about announcements from guilds you've joined.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -1038,14 +1054,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Direct Messages</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Receive notifications when someone sends you a direct message.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -1060,14 +1076,14 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
                           <h5 className="font-medium">Weekly Newsletter</h5>
                           <p className="text-sm text-[#F4F0E6]/70 mt-1">
                             Receive our weekly newsletter with featured quests, guilds, and tavern updates.
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="flex-shrink-0">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -1087,7 +1103,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
                   <div className="pt-4">
                     <button
                       onClick={saveNotificationSettings}
-                      className="px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center"
+                      className="w-full sm:w-auto px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center justify-center"
                     >
                       <Save size={16} className="mr-2" />
                       Save Changes
@@ -1097,9 +1113,199 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
               </div>
             )}
 
+            {/* Spending Limits */}
+            {activeTab === "spending" && (
+              <div className="p-4 md:p-6">
+                <h3 className="text-xl font-bold mb-6 flex items-center">
+                  <Shield size={24} className="mr-2 text-[#8B75AA]" />
+                  Spending Limits
+                </h3>
+
+                <div className="space-y-6">
+                  {/* Current Spending Overview */}
+                  <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
+                    <h4 className="font-semibold text-[#F4F0E6] mb-3 flex items-center">
+                      <TrendingDown size={18} className="mr-2 text-[#8B75AA]" />
+                      Current Spending
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-[#F4F0E6]/70">Today</div>
+                        <div className="text-xl font-bold text-[#F4F0E6]">{dailySpent.toLocaleString()} Gold</div>
+                        {user?.spendingLimits?.enabled && (
+                          <div className="text-xs text-[#8B75AA]">
+                            of {user.spendingLimits.dailyLimit.toLocaleString()} limit
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm text-[#F4F0E6]/70">This Week</div>
+                        <div className="text-xl font-bold text-[#F4F0E6]">{weeklySpent.toLocaleString()} Gold</div>
+                        {user?.spendingLimits?.enabled && (
+                          <div className="text-xs text-[#8B75AA]">
+                            of {user.spendingLimits.weeklyLimit.toLocaleString()} limit
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Spending Limits Settings */}
+                  <div>
+                    <h4 className="text-lg font-bold mb-3">Spending Limit Settings</h4>
+
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <h5 className="font-medium">Enable Spending Limits</h5>
+                          <p className="text-sm text-[#F4F0E6]/70 mt-1">
+                            Prevent accidental overspending by setting daily and weekly limits.
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={spendingForm.enabled}
+                              onChange={(e) => setSpendingForm((prev) => ({ ...prev, enabled: e.target.checked }))}
+                            />
+                            <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {spendingForm.enabled && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Daily Spending Limit (Gold)</label>
+                            <input
+                              type="number"
+                              min="100"
+                              max="50000"
+                              className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
+                              value={spendingForm.dailyLimit}
+                              onChange={(e) =>
+                                setSpendingForm((prev) => ({
+                                  ...prev,
+                                  dailyLimit: Number.parseInt(e.target.value) || 0,
+                                }))
+                              }
+                              placeholder="e.g. 5000"
+                            />
+                            <p className="text-xs text-[#F4F0E6]/70 mt-1">
+                              Maximum gold you can spend per day (minimum: 100, maximum: 50,000)
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Weekly Spending Limit (Gold)</label>
+                            <input
+                              type="number"
+                              min="500"
+                              max="200000"
+                              className="w-full px-3 py-2 bg-[#3D2A2F] border border-[#CDAA7D] rounded text-[#F4F0E6] focus:outline-none focus:border-[#8B75AA] text-sm"
+                              value={spendingForm.weeklyLimit}
+                              onChange={(e) =>
+                                setSpendingForm((prev) => ({
+                                  ...prev,
+                                  weeklyLimit: Number.parseInt(e.target.value) || 0,
+                                }))
+                              }
+                              placeholder="e.g. 25000"
+                            />
+                            <p className="text-xs text-[#F4F0E6]/70 mt-1">
+                              Maximum gold you can spend per week (minimum: 500, maximum: 200,000)
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex-1">
+                              <h5 className="font-medium">Limit Notifications</h5>
+                              <p className="text-sm text-[#F4F0E6]/70 mt-1">
+                                Get notified when you're approaching your spending limits.
+                              </p>
+                            </div>
+                            <div className="flex-shrink-0">
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  className="sr-only peer"
+                                  checked={spendingForm.notifications}
+                                  onChange={(e) =>
+                                    setSpendingForm((prev) => ({ ...prev, notifications: e.target.checked }))
+                                  }
+                                />
+                                <div className="w-11 h-6 bg-[#2C1A1D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#8B75AA]"></div>
+                              </label>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Spending History Preview */}
+                  {user?.spendingHistory && user.spendingHistory.length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-bold mb-3">Recent Spending</h4>
+                      <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-4">
+                        <div className="space-y-3">
+                          {user.spendingHistory
+                            .slice(-5)
+                            .reverse()
+                            .map((record) => (
+                              <div key={record.id} className="flex justify-between items-center">
+                                <div>
+                                  <div className="font-medium text-[#F4F0E6]">{record.description}</div>
+                                  <div className="text-xs text-[#F4F0E6]/70">
+                                    {record.date.toLocaleDateString()} • {record.type.replace("_", " ")}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-bold text-red-400">-{record.amount.toLocaleString()}</div>
+                                  <div className="text-xs text-[#F4F0E6]/70">Gold</div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Safety Information */}
+                  <div className="bg-[#8B75AA]/10 border border-[#8B75AA]/30 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <AlertCircle size={20} className="text-[#8B75AA] mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-bold text-[#8B75AA] mb-2">Safety Features</h4>
+                        <ul className="text-sm text-[#F4F0E6]/70 space-y-1">
+                          <li>• Spending limits help prevent accidental overspending</li>
+                          <li>• Limits reset daily at midnight and weekly on Sundays</li>
+                          <li>• You'll receive warnings before reaching your limits</li>
+                          <li>• Limits can be adjusted anytime in your settings</li>
+                          <li>• Emergency spending may require additional confirmation</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      onClick={saveSpendingSettings}
+                      className="w-full sm:w-auto px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors flex items-center justify-center"
+                    >
+                      <Save size={16} className="mr-2" />
+                      Save Spending Limits
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Payment Methods */}
             {activeTab === "payment" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">Payment Methods</h3>
 
                 <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-6 text-center">
@@ -1116,7 +1322,7 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
 
             {/* Subscriptions */}
             {activeTab === "subscriptions" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">Subscriptions</h3>
 
                 <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-6 text-center">
@@ -1131,26 +1337,9 @@ export function Settings({ user, updateSettings, showToast }: SettingsProps) {
               </div>
             )}
 
-            {/* Parental Controls */}
-            {activeTab === "parental" && (
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-6">Parental Controls</h3>
-
-                <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-6 text-center">
-                  <p className="text-lg mb-4">Parental controls are not enabled.</p>
-                  <p className="text-sm text-[#F4F0E6]/70 mb-6">
-                    Set up parental controls to manage content access and spending limits.
-                  </p>
-                  <button className="px-6 py-2 bg-[#8B75AA] text-white rounded font-medium hover:bg-[#7A6699] transition-colors">
-                    Set Up Parental Controls
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* App Permissions */}
             {activeTab === "app" && (
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 <h3 className="text-xl font-bold mb-6">App Permissions</h3>
 
                 <div className="bg-[#3D2A2F] border border-[#CDAA7D]/30 rounded-lg p-6 text-center">

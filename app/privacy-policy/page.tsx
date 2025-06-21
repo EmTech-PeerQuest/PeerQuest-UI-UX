@@ -94,11 +94,11 @@ export default function PrivacyPolicy() {
           request that we delete your account and associated data by contacting us.
         </p>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-4">7. Children's Privacy</h2>
+        <h2 className="text-2xl font-semibold mt-6 mb-4">7. Age Requirement</h2>
         <p className="mb-4">
-          Our platform is not directed to children under the age of 13, and we do not knowingly collect personal
-          information from children under 13. If we learn that we have collected personal information from a child under
-          13, we will promptly delete that information.
+          Our platform is designed for users who are 18 years of age or older. We do not knowingly collect personal
+          information from individuals under 18. If we learn that we have collected personal information from someone
+          under 18, we will promptly delete that information and terminate their account.
         </p>
 
         <h2 className="text-2xl font-semibold mt-6 mb-4">8. Changes to this Privacy Policy</h2>
