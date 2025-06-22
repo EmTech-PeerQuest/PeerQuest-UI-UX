@@ -22,6 +22,7 @@ import { MessagingSystem } from "@/components/messaging-system"
 import { QuestManagement } from "@/components/quest-management"
 import { EnhancedGuildManagement } from "@/components/enhanced-guild-management"
 import { AdminPanel } from "@/components/admin-panel"
+import { AIChatbot } from "@/components/ai-chatbot"
 import type { User, Quest, Guild, GuildApplication } from "@/lib/types"
 import { mockUsers, mockQuests, mockGuilds } from "@/lib/mock-data"
 import { authService } from "@/lib/auth-service"
@@ -521,6 +522,9 @@ export default function Home() {
           showToast={showToast}
         />
       )}
+
+      {/* AI Chatbot */}
+      <AIChatbot currentUser={currentUser} />
 
       <Footer />
 
